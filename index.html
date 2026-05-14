@@ -1,0 +1,1834 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0A0C10" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#FAFAF7" media="(prefers-color-scheme: light)">
+<title>PDS — Vizualizace ke zkoušce 2025/2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&family=Funnel+Sans:wght@300..800&family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@400..600&display=swap">
+<script>
+  // Apply theme before stylesheet to avoid flash
+  (function() {
+    var saved = localStorage.getItem('pds-theme');
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var theme = saved || (prefersDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
+</script>
+<script type="module" src="/src/main.js"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="masthead-rule">
+    <span class="rule-left">
+      <span class="dot"></span>
+      Akademický rok <strong>2025/2026</strong>
+    </span>
+    <span class="rule-mid">FIT VUT · Přenos dat, sítě &amp; protokoly</span>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+      <span class="theme-sun">☼</span>
+      <span class="theme-moon">☾</span>
+    </button>
+  </div>
+  <h1>
+    <span class="brand">PDS</span><span class="brand-sep">/</span><span class="brand-soft">vizualizace</span>
+    <em class="brand-italic">— ke zkoušce</em>
+  </h1>
+  <p class="subtitle">
+    Devět témat semestrální zkoušky s interaktivními demonstracemi. Klikejte, posouvejte, krokujte.
+    Materiál vychází z přednášek a oficiálního seznamu otázek <code>temata26.pdf</code>.
+  </p>
+  <div class="meta-row">
+    <span class="meta-pair"><span class="meta-k">sheets</span><span class="meta-v">09</span></span>
+    <span class="meta-pair"><span class="meta-k">demos</span><span class="meta-v">52+</span></span>
+    <span class="meta-pair"><span class="meta-k">framework</span><span class="meta-v">Vanilla + Vite</span></span>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="overview" class="active">Přehled</button>
+  <button data-tab="t1"><span class="tab-num">1</span>Transport</button>
+  <button data-tab="t2"><span class="tab-num">2</span>Směrování</button>
+  <button data-tab="t3"><span class="tab-num">3</span>Přepínače</button>
+  <button data-tab="t4"><span class="tab-num">4</span>Směrovače</button>
+  <button data-tab="t5"><span class="tab-num">5</span>Klasifikace</button>
+  <button data-tab="t6"><span class="tab-num">6</span>P2P</button>
+  <button data-tab="t7"><span class="tab-num">7</span>Identifikace</button>
+  <button data-tab="t8"><span class="tab-num">8</span>Pakety v OS</button>
+  <button data-tab="t9"><span class="tab-num">9</span>SDN &amp; P4</button>
+</nav>
+
+<main>
+
+<!-- ============== OVERVIEW ============== -->
+<section id="tab-overview" class="topic active">
+  <h2>Přehled témat</h2>
+  <p class="topic-intro">Devět témat semestrální zkoušky PDS. Klikněte na kartu pro otevření tématu s vizualizacemi a interaktivními demonstracemi.</p>
+  <div class="overview-grid" id="overview-grid"></div>
+  <div class="note" style="margin-top: 24px">
+    <span class="label">Jak používat</span>
+    Každé téma obsahuje výklad podle bodů z <code>temata26.pdf</code> a interaktivní demonstrace klíčových algoritmů a struktur. Klávesnice: Šipky vlevo/vpravo přepínají taby.
+  </div>
+</section>
+
+<!-- ============== TOPIC 1: TRANSPORT ============== -->
+<section id="tab-t1" class="topic">
+  <h2>1. Transportní protokoly</h2>
+  <p class="topic-intro">Transportní vrstva (L4) doplňuje IP o porty, řízení spojení, spolehlivost a kontrolu zahlcení. Existuje spektrum: <span class="key">UDP</span> nic, <span class="key">TCP</span> všechno, mezi nimi QUIC, SCTP, MP-TCP, DCCP.</p>
+
+  <div class="subtopic">
+    <h3>Teoretický úvod</h3>
+    <p>Síťová vrstva (L3, IP) je úmyslně hloupá — pakety doručuje <em>best-effort</em>, bez záruk pořadí, doručení nebo kontroly toku. <span class="key">Transportní vrstva</span> sedí mezi IP a aplikací a má dvě základní úlohy: <strong>(1) multiplexování</strong> dat mezi procesy pomocí <em>portů</em>, a <strong>(2) volitelnou spolehlivost, pořadí, kontrolu toku a řízení zahlcení</strong>, pokud o ně aplikace stojí.</p>
+    <p>Existuje pragmatický důvod, proč se zrovna L4 stalo nejvíc inženýrským místem v internetu. L2 vrstvu nemůžete měnit (driver/HW dělá výrobce), L3 změnit znamená rozbít celý internet (nikdo nepovolí), zato L4 žije v userspace nebo kernelspace a dá se ladit lokálně. Proto se v transportní vrstvě po desetiletí dělá majorita PhD prací o sítích.</p>
+    <p>ISO/OSI definuje <span class="key">čtyři cíle</span>, které musí rozumný transportní protokol zvládat: spolehlivé doručení, řízení toku vůči příjemci, řízení zahlcení vůči síti, doručování v pořadí. TCP zaškrtne všechny čtyři, UDP žádnou. Při výběru protokolu se vývojář ptá na <em>šířku pásma</em> (elastická vs. rezervovaná), <em>zpoždění</em> (real-time vs. asynchronní) a <em>ztrátovost</em> (tolerovaná vs. vadí). Z těchto tří os vzniká celé spektrum protokolů.</p>
+    <p><strong>Klíčový kontext historie:</strong> TCP (RFC 793, 1981) vznikl v době pomalých linek; jeho návrh musel přežít „congestion collapse" roku 1986 (Van Jacobson, AIMD). V 2010s vznikly následníci řešící konkrétní slabiny TCP: <em>SCTP</em> (head-of-line + multihoming pro telefonní signalizaci), <em>MPTCP</em> (transparentní multipath pro mobilní zařízení s Wi-Fi+LTE), <em>QUIC</em> (0-RTT handshake a streamy nad UDP, dnes HTTP/3). Pochopení této evoluce je klíčem k otázce „proč existuje tolik L4 protokolů".</p>
+  </div>
+
+  <div class="subtopic">
+    <h3>Detekce chyb na úrovni paketů</h3>
+    <p>Paket se může v síti dostat do <span class="num">pěti</span> typů poruch:</p>
+    <div class="grid-3">
+      <div class="card"><h5>Ztráta</h5>Bitové chyby, zahlcené linky, špatné směrovací tabulky, vadný HW.</div>
+      <div class="card"><h5>Ztráta fragmentu</h5>IPv4 fragmentace zničí celý paket, IPv6 to zakazuje (PMTUD).</div>
+      <div class="card"><h5>Duplicita</h5>Zbytečná retransmise odesílatele způsobí dorazí dvakrát.</div>
+      <div class="card"><h5>Vložení</h5>Od útočníka, zpožděný z minulého spojení, poškozený obsah.</div>
+      <div class="card"><h5>Změna pořadí</h5>Dynamické směrování s víc cestami.</div>
+    </div>
+
+    <h4>Kvalita linky — PER z BER</h4>
+    <p>Pravděpodobnost, že paket projde nedotčen: <code>(1−p<sub>e</sub>)<sup>N</sup></code>, kde <code>N</code> je délka v bitech. Spočítejte si:</p>
+    <div class="demo">
+      <div class="demo-title">PER kalkulátor</div>
+      <div class="demo-controls">
+        <label>BER (p<sub>e</sub>): <input type="number" id="ber-input" value="0.0001" step="0.00001" min="0" max="1"></label>
+        <label>Velikost paketu (B): <input type="number" id="ber-pktsize" value="1400" min="40" max="9000"></label>
+        <button class="btn" id="ber-calc">Spočítat</button>
+      </div>
+      <div class="demo-output" id="ber-output">Pro BER 0,0001 a 1400 B: P<sub>err</sub> ≈ 67,4 % — i miniaturní BER zničí dlouhé pakety.</div>
+    </div>
+
+    <h4>Sekvenční čísla — kolik bitů?</h4>
+    <p>Prostor 2<sup>n</sup> musí pokrýt: <code>(2·MPL + T + A)·R</code></p>
+    <div class="demo">
+      <div class="demo-title">Kalkulátor velikosti sek. čísel</div>
+      <div class="demo-controls">
+        <label>MPL (s): <input type="number" id="seq-mpl" value="120"></label>
+        <label>Timeout T (s): <input type="number" id="seq-t" value="60"></label>
+        <label>ACK delay A (s): <input type="number" id="seq-a" value="0.5" step="0.1"></label>
+        <label>Linka (Mb/s): <input type="number" id="seq-bw" value="2"></label>
+        <label>Paket (B): <input type="number" id="seq-pkt" value="40"></label>
+        <button class="btn" id="seq-calc">Spočítat</button>
+      </div>
+      <div class="demo-output large" id="seq-output">Klikněte „Spočítat"</div>
+      <p style="font-size:13px;color:var(--text-muted);margin-top:8px">TCP má 32 bitů — pokryje i gigabitové linky při MPL 2 min.</p>
+    </div>
+
+    <h4>Adaptivní timeout (EWMA)</h4>
+    <p><code>srtt = (1−a)·srtt + a·rtt</code>, kde <span class="key">a = 1/8</span>. Pro vyhlazení odchylky: <code>timeout = srtt + 4·rttvar</code> s <span class="key">b = 1/4</span>, <span class="key">X = 4</span>.</p>
+    <div class="demo">
+      <div class="demo-title">EWMA timeout simulátor</div>
+      <div class="demo-controls">
+        <button class="btn" id="ewma-step">Další paket</button>
+        <button class="btn btn-secondary" id="ewma-reset">Reset</button>
+        <label>α: <input type="range" id="ewma-alpha" min="0.05" max="0.5" step="0.025" value="0.125"><span id="ewma-alpha-val">0.125</span></label>
+      </div>
+      <svg id="ewma-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+    </div>
+
+    <h4>Negativní potvrzování (NACK)</h4>
+    <p>Příjemce explicitně řekne „paket s číslem N mi chybí". Dvě nepříjemnosti: NACK se sám může ztratit, a v zahlcené síti přidává další provoz. <span class="warn">TCP explicitní NACK nemá</span> — místo toho posílá <code>duplicate ACK</code>, tři dup-ACK = implicitní NACK = Fast Retransmit.</p>
+  </div>
+
+  <div class="subtopic">
+    <h3>Metody řízení toku dat</h3>
+    <div class="demo">
+      <div class="demo-title">Animace 4 metod řízení toku — krok za krokem</div>
+      <div class="demo-howto">
+        <strong>Jak to funguje</strong>
+        Vyberte metodu (S&amp;W / GBN / SR / FEC) a index paketu, který se „ztratí". <em>Další krok</em>
+        ukazuje vždy jednu událost: <span style="color:#1F4B8A">modrá šipka</span> = data klient→server,
+        <span style="color:#1F7A4E">zelená přerušovaná</span> = ACK, <span style="color:#7a3ea1">fialová</span>
+        = dup-ACK, <span style="color:#D6553D">červená přerušovaná</span> = ztracený paket. Aktivní událost
+        je vždy tučně doplněná o anotaci stavu odesílatele a příjemce.
+      </div>
+      <div class="demo-controls">
+        <label>Metoda:
+          <select id="flow-method">
+            <option value="saw">Stop-and-Wait</option>
+            <option value="gbn">Go-Back-N (w=4)</option>
+            <option value="sr">Selective Repeat (w=4)</option>
+            <option value="fec">FEC (k=3 + 1 parity)</option>
+          </select>
+        </label>
+        <label>Ztráta paketu č.: <input type="number" id="flow-loss" value="2" min="0" max="9"></label>
+        <button class="btn" id="flow-step">▸ Další krok</button>
+        <button class="btn btn-secondary" id="flow-play">Auto-přehrát</button>
+        <button class="btn btn-secondary" id="flow-reset">Reset</button>
+      </div>
+      <svg id="flow-svg" viewBox="0 0 720 500" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="flow-info" style="margin-top:8px;font-size:13px"></div>
+    </div>
+
+    <h4>Efektivita Go-Back-N</h4>
+    <p><code>eff = (1−p) / (1−p + p·w)</code></p>
+    <div class="demo">
+      <div class="demo-title">GBN efektivita</div>
+      <div class="demo-controls">
+        <label>Okno w: <input type="range" id="gbn-w" min="1" max="500" value="250"><span id="gbn-w-val">250</span></label>
+        <label>Chybovost p: <input type="range" id="gbn-p" min="0" max="0.05" step="0.0001" value="0.01"><span id="gbn-p-val">0.01</span></label>
+      </div>
+      <svg id="gbn-svg" viewBox="0 0 700 220" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>TCP — handshake, AIMD, varianty</h3>
+
+    <h4>3-way handshake a 4-way close</h4>
+    <div class="demo">
+      <div class="demo-title">TCP handshake — krokovaná animace</div>
+      <div class="demo-howto">
+        <strong>Jak to funguje</strong>
+        Vyberte scénář (3-way open / 4-way close / half-close). Klikáním na <em>Další krok</em>
+        postupně přibývají TCP segmenty na časové ose. Současný segment je tučně a doprovází ho
+        TCP state-machine anotace (<code>SYN_SENT</code>, <code>SYN_RCVD</code>, <code>ESTABLISHED</code>, …)
+        a kurzívou poznámka „proč to tak je". <em>Auto-přehrát</em> spustí animaci automaticky (cca 0,85 s/krok).
+      </div>
+      <div class="demo-controls">
+        <label>Scénář:
+          <select id="tcp-scenario">
+            <option value="open">Navázání spojení (3-way)</option>
+            <option value="close">Ukončení (4-way close)</option>
+            <option value="halfclose">Half-close</option>
+          </select>
+        </label>
+        <button class="btn" id="tcp-step">▸ Další krok</button>
+        <button class="btn btn-secondary" id="tcp-play">Auto-přehrát</button>
+        <button class="btn btn-secondary" id="tcp-reset">Reset</button>
+      </div>
+      <svg id="tcp-svg" viewBox="0 0 720 420" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+    </div>
+
+    <h4>AIMD — graf zubů pily</h4>
+    <p>Slow Start (exponenciálně) → Congestion Avoidance (+1 MSS/RTT) → 3 dup-ACK (půlení) nebo timeout (cwnd=1, restart SS).</p>
+    <div class="demo">
+      <div class="demo-title">AIMD — krokovaný simulátor cwnd</div>
+      <div class="demo-howto">
+        <strong>Jak to funguje</strong>
+        Křivka roste po každém RTT. <span style="color:#B86F00;font-weight:600">Oranžová</span> = Slow Start (exponenciální zdvojování),
+        <span style="color:#1F4B8A;font-weight:600">modrá</span> = Congestion Avoidance (+1 MSS/RTT),
+        <span style="color:#1F7A4E;font-weight:600">zelená</span> = CUBIC bikubický růst.
+        <span style="color:#D6553D;font-weight:600">Červené tečky</span> značí ztráty: malé = 3 dup-ACK (cwnd /2 nebo →1), velké = timeout (cwnd → 1).
+        Klikejte „Další etapa" pro postupný růst, nebo „Auto-přehrát" pro plynulou animaci.
+      </div>
+      <div class="demo-controls">
+        <label>Varianta:
+          <select id="aimd-variant">
+            <option value="tahoe">Tahoe (loss → cwnd=1)</option>
+            <option value="reno" selected>Reno (loss → cwnd/2)</option>
+            <option value="cubic">CUBIC (bikubická křivka)</option>
+          </select>
+        </label>
+        <label>Ztrátovost (%): <input type="range" id="aimd-loss" min="0" max="10" step="0.1" value="2"><span id="aimd-loss-val">2.0</span></label>
+        <label>ssthresh start: <input type="number" id="aimd-ssthresh" value="32" min="4" max="200"></label>
+        <button class="btn" id="aimd-step">▸ Další etapa</button>
+        <button class="btn btn-secondary" id="aimd-play">Auto-přehrát</button>
+        <button class="btn btn-secondary" id="aimd-reset">Reset</button>
+      </div>
+      <svg id="aimd-svg" viewBox="0 0 720 360" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+    </div>
+
+    <div class="note">
+      <span class="label">Mýtus</span>
+      TCP <em>nečísluje pakety, ale bajty</em>. Sequence Number je offset bajtu v proudu. Říct „balíky 1, 2, 3" je u Vladimíra Veselého fatální chyba.
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>TCP varianty — porovnání cwnd křivek</h3>
+    <p>Tahoe padá při ztrátě rovnou na 1, Reno jen na polovinu (Fast Recovery), Vegas se rozhoduje podle RTT, CUBIC roste bikubicky a tráví víc času blízko propustnosti.</p>
+    <div class="demo">
+      <div class="demo-title">Tahoe vs Reno vs CUBIC — souběžné cwnd</div>
+      <div class="demo-controls">
+        <label>Ztrátovost (%): <input type="range" id="variants-loss" min="0" max="10" step="0.1" value="2"><span id="variants-loss-val">2.0</span></label>
+        <button class="btn" id="variants-play">Spustit</button>
+      </div>
+      <svg id="variants-svg" viewBox="0 0 700 280" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Fast Retransmit — tři duplicate ACK</h3>
+    <p>TCP nemá explicitní NACK. Místo toho příjemce posílá <code>duplicate ACK</code> s posledním kontiguálním seq, kdykoli vidí mezeru. Tři dup-ACK = implicitní NACK = Fast Retransmit, BEZ čekání na timeout.</p>
+    <div class="demo">
+      <div class="demo-title">Animace 3 dup-ACK → Fast Retransmit</div>
+      <button class="btn" id="dupack-play">Přehrát animaci</button>
+      <button class="btn btn-secondary" id="dupack-reset">Reset</button>
+      <svg id="dupack-svg" viewBox="0 0 720 520" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="dupack-info" style="margin-top:8px;font-size:13px"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>QUIC 0-RTT vs TCP+TLS — kolik RTT do prvního bajtu?</h3>
+    <p>TCP+TLS 1.2 potřebuje 3 RTT před prvním aplikačním bajtem. TLS 1.3 zkrátil na 2 RTT. QUIC: 1 RTT poprvé, <span class="key">0 RTT</span> u opakovaného přístupu se STK tokenem.</p>
+    <div class="demo">
+      <div class="demo-title">Porovnání 4 handshake protokolů</div>
+      <div class="demo-controls">
+        <label>RTT (ms): <input type="number" id="rtt-input" value="50" min="1" max="500"></label>
+        <button class="btn" id="rtt-show">Zobrazit</button>
+      </div>
+      <svg id="rtt-svg" viewBox="0 0 700 320" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="rtt-info"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>SCTP 4-way handshake (anti-SYN-flood)</h3>
+    <p>SCTP používá 4 pakety: INIT, INIT_ACK, COOKIE_ECHO, COOKIE_ACK. <strong>Důvod není spolehlivost, ale obrana proti SYN-flood</strong> — server alokuje stav až po platném COOKIE_ECHO.</p>
+    <div class="demo">
+      <div class="demo-title">SCTP 4-way handshake — krokovaná animace</div>
+      <div class="demo-howto">
+        <strong>Jak to funguje</strong>
+        Klikejte „Další krok" pro postupné zobrazení všech 4 paketů. Klíčová pointa:
+        po prvních dvou paketech server <em>nealokuje žádný stav</em> — všechen kontext je v podepsaném
+        cookie, který klient vrací. Teprve po platném <code>COOKIE_ECHO</code> server stav vytvoří.
+        Tím je SYN-flood neúčinný (útočník nezabere serveru paměť).
+      </div>
+      <div class="demo-controls">
+        <button class="btn" id="sctp-step">▸ Další krok</button>
+        <button class="btn btn-secondary" id="sctp-play">Auto-přehrát</button>
+        <button class="btn btn-secondary" id="sctp-reset">Reset</button>
+      </div>
+      <svg id="sctp-svg" viewBox="0 0 720 420" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>MPTCP — multipath přes subflows</h3>
+    <p>Jedno logické TCP spojení rozdělené do několika subflow přes různé cesty. Klíčový trik: schovává se do TCP options (MP_CAPABLE, MP_JOIN). Coupled AIMD zajišťuje férovost vůči TCP.</p>
+    <div class="demo">
+      <div class="demo-title">MPTCP subflows visualizér</div>
+      <div class="demo-controls">
+        <label>Počet cest: <input type="number" id="mptcp-paths" value="2" min="1" max="4"></label>
+        <label>Cesta sdílí bottleneck? <input type="checkbox" id="mptcp-shared"></label>
+        <button class="btn" id="mptcp-go">Spusti</button>
+      </div>
+      <svg id="mptcp-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="mptcp-info"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Srovnání L4 protokolů</h3>
+    <table>
+      <thead>
+        <tr><th>Protokol</th><th>Spojení</th><th>Spolehlivost</th><th>In-order</th><th>Flow</th><th>Congestion</th><th>Bonus</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>TCP</strong></td><td>ano</td><td>ano</td><td>byte stream</td><td>ano</td><td>ano</td><td>—</td></tr>
+        <tr><td><strong>UDP</strong></td><td>ne</td><td>ne</td><td>ne</td><td>ne</td><td>ne</td><td>—</td></tr>
+        <tr><td><strong>DCCP</strong></td><td>ano</td><td>ne</td><td>ne</td><td>ne</td><td>ano</td><td>CCID2/3</td></tr>
+        <tr><td><strong>SCTP</strong></td><td>ano</td><td>ano</td><td>message stream</td><td>ano</td><td>ano</td><td>multihoming + multistream</td></tr>
+        <tr><td><strong>MPTCP</strong></td><td>ano</td><td>ano</td><td>byte stream</td><td>ano</td><td>coupled AIMD</td><td>multipath subflows</td></tr>
+        <tr><td><strong>QUIC</strong></td><td>ano</td><td>ano</td><td>per-stream</td><td>ano</td><td>CUBIC</td><td>0-RTT, šifrované, TLS 1.3</td></tr>
+      </tbody>
+    </table>
+    <div class="grid-2" style="margin-top:14px">
+      <div class="card"><h5>SCTP — proč 4-way handshake?</h5>Obrana proti SYN-flood (cookie). NE pro spolehlivost.</div>
+      <div class="card"><h5>MPTCP coupled AIMD</h5>Férové vůči TCP na shared bottlenecku. NE 4× šířka pásma.</div>
+      <div class="card"><h5>QUIC nad UDP — proč?</h5>Kvůli NATům, ne kvůli "lehkosti" UDP. Nový L4 by NAT nepropustil.</div>
+      <div class="card"><h5>DCCP CCID</h5>CCID2 = TCP-like, CCID3 = equation-based TFRC pro streaming.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== TOPIC 2: ROUTING ============== -->
+<section id="tab-t2" class="topic">
+  <h2>2. Teorie směrování</h2>
+  <p class="topic-intro">Směrování (L3) rozhoduje, kudy paket půjde ke svému cíli. Pošťák jako analogie: kdokoli, kdo dostane obálku a podle nějaké tabulky ji předá dál. Hierarchické adresy (IP, NSAP) umožňují <span class="key">agregaci prefixů</span>.</p>
+
+  <div class="subtopic">
+    <h3>Teoretický úvod</h3>
+    <p><strong>Adresa vs jméno.</strong> Adresa říká <em>kde</em> něco je (lokalita), jméno říká <em>co</em> to je (identita). Adresy mohou být <em>ploché</em> (MAC, port — z adresy nic o topologii) nebo <em>hierarchické</em> (IP, NSAP — z adresy se dá vyčíst lokalita). Manhattan v New Yorku je archetyp hierarchického adresování. Pro směrování je hierarchie <span class="key">zlato</span>, protože umožňuje agregaci prefixů; ploché adresování je peklo (musíte znát plnou tabulku).</p>
+    <p><strong>Proč směrovací protokoly existují?</strong> Dva důvody: aby <em>nikdo nemusel ručně klikat</em> na všech routerech, když se topologie změní (manuálně nemyslitelné u sítí 100+ uzlů), a aby si routery udržovaly tabulky <em>bez smyček</em> (smyčka = paket točí mezi dvěma routery a pálí elektřinu, než vyexpiruje TTL).</p>
+    <p><strong>Tři rodiny protokolů</strong> podle toho, <em>co</em> si routery vyměňují: <span class="key">distance-vector</span> (routing by rumor — vidím jen sousedy a jejich vzdálenosti, Bellman-Ford výpočet, RIP/EIGRP), <span class="key">link-state</span> (vidím celou topologii skrz flooding LSA, lokální Dijkstra, OSPF/IS-IS), <span class="key">path-vector</span> (vidím celou sekvenci AS, policy-based, BGP).</p>
+    <p><strong>Hierarchie rozhodování o cestě</strong> má vždy tři úrovně, v pevném pořadí: (1) <em>délka prefixu</em> — nejspecifičtější vyhrává (LPM), (2) <em>administrativní vzdálenost</em> — důvěryhodnost zdroje (Static 1 přebije OSPF 110), (3) <em>metrika</em> uvnitř protokolu. Mezi protokoly se <em>metriky nikdy nesrovnávají přímo</em>, protože RIP hop count a OSPF cost nejsou stejná jednotka — proto je nad metrikou ještě AD jako vyšší úroveň.</p>
+    <p><strong>MPLS jako „L2.5"</strong> řeší zcela jiný problém: rychlost forwardingu v páteřních sítích. Místo IP lookupu se uvnitř MPLS oblasti přepíná podle <em>labelu</em>. Filozofie: přesuň složitost na okraj sítě (Provider Edge), uvnitř optimalizuj na surový výkon.</p>
+  </div>
+
+  <div class="subtopic">
+    <h3>Směrovací tabulka a Cisco AD</h3>
+    <p>Router rozhoduje <span class="key">ve třech krocích, vždy v tomto pořadí</span>: Délka prefixu → Administrative distance → Metrika.</p>
+    <div class="demo">
+      <div class="demo-title">Výběr cesty — interaktivní simulátor</div>
+      <p style="font-size:13px;margin-bottom:8px">Pro paket cíl <code id="route-dst">10.5.1.100</code> má router 4 kandidátní cesty. Která vyhraje?</p>
+      <button class="btn" id="route-randomize" style="margin-bottom:10px">Náhodný cíl</button>
+      <table id="route-table" style="background:white">
+        <thead><tr><th>Prefix</th><th>Zdroj</th><th>AD</th><th>Metrika</th><th>Next-hop</th><th>Match?</th></tr></thead>
+        <tbody id="route-rows"></tbody>
+      </table>
+      <div class="demo-output" id="route-result" style="margin-top:10px"></div>
+    </div>
+
+    <h4>Cisco Administrative Distance</h4>
+    <table>
+      <thead><tr><th>Zdroj</th><th>AD</th><th>Logika</th></tr></thead>
+      <tbody>
+        <tr><td>Connected</td><td class="mono">0</td><td>Přímo připojené rozhraní</td></tr>
+        <tr><td>Static</td><td class="mono">1</td><td>Ručně nastavené adminem</td></tr>
+        <tr><td>EIGRP summary</td><td class="mono">5</td><td>Cisco protokol, agregace</td></tr>
+        <tr><td>eBGP</td><td class="mono">20</td><td>Externí BGP soused</td></tr>
+        <tr><td>EIGRP</td><td class="mono">90</td><td>Vlastní Cisco protokol</td></tr>
+        <tr><td>OSPF</td><td class="mono">110</td><td>Otevřené IGP</td></tr>
+        <tr><td>IS-IS</td><td class="mono">115</td><td>Link-state, L2</td></tr>
+        <tr><td>RIP</td><td class="mono">120</td><td>Nejstarší, hop count</td></tr>
+        <tr><td>iBGP</td><td class="mono">200</td><td>Záměrně vysoké — preferuj IGP</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="subtopic">
+    <h3>Algoritmy — Bellman-Ford a Dijkstra</h3>
+    <div class="demo">
+      <div class="demo-title">Krokovaný výpočet nejkratších cest</div>
+      <div class="demo-howto">
+        <strong>Jak to funguje</strong>
+        Vyberte algoritmus a zdroj. <em>Krok</em> = jedna iterace (Dijkstra: vybere nejbližší
+        nenavštívený uzel a relaxuje jeho sousedy; Bellman-Ford: jeden průchod přes všechny hrany).
+        Uzly mění barvu podle stavu: bílá = nedosažitelný/nenavštívený, žlutá = na hranici,
+        modrá = navštívený, oranžová obrysem = aktuálně zpracovávaný. Pod každým uzlem je jeho
+        nejlepší známá vzdálenost. <em>Auto</em> spustí algoritmus do konce.
+      </div>
+      <div class="demo-controls">
+        <label>Algoritmus:
+          <select id="sp-algo">
+            <option value="dijkstra">Dijkstra (centralizovaný, nezáporné)</option>
+            <option value="bf">Bellman-Ford (distribuovaný, i záporné)</option>
+          </select>
+        </label>
+        <label>Zdroj: <select id="sp-source"></select></label>
+        <button class="btn" id="sp-step">Krok</button>
+        <button class="btn" id="sp-auto">Auto</button>
+        <button class="btn btn-secondary" id="sp-reset">Reset</button>
+      </div>
+      <svg id="sp-svg" viewBox="0 0 700 400" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <ol class="step-list" id="sp-steps"></ol>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Distance-vector, Link-state, Path-vector</h3>
+    <div class="grid-3">
+      <div class="card">
+        <h5>Distance-vector</h5>
+        Routing by rumor. Vidím <span class="key">jen sousedy</span> a jejich oznámené vzdálenosti. Bellman-Ford výpočet, problém counting-to-infinity. <em>RIP, EIGRP, Babel.</em>
+      </div>
+      <div class="card">
+        <h5>Link-state</h5>
+        Vidím <span class="key">celou topologii</span> přes flooding LSA. Lokálně spustím Dijkstru. Vyžaduje uniformní politiku. <em>OSPF, IS-IS.</em>
+      </div>
+      <div class="card">
+        <h5>Path-vector</h5>
+        Vidím <span class="key">celou sekvenci AS</span>. Smyčky se detekují okamžitě (vlastní AS v cestě). Policy-based. <em>BGP.</em>
+      </div>
+    </div>
+
+    <h4>Counting-to-infinity demo (RIP)</h4>
+    <div class="demo">
+      <div class="demo-title">Klasický problém distance-vectoru</div>
+      <div class="demo-controls">
+        <label>Obrana:
+          <select id="cti-defense">
+            <option value="none">Bez obrany (count to infinity)</option>
+            <option value="maximum">Defining Maximum (16=∞)</option>
+            <option value="splithorizon">Split Horizon</option>
+            <option value="poison">Poison Reverse</option>
+          </select>
+        </label>
+        <button class="btn" id="cti-break">Síť padla</button>
+        <button class="btn btn-secondary" id="cti-reset">Reset</button>
+      </div>
+      <svg id="cti-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <ol class="step-list" id="cti-steps"></ol>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>OSPF cost, EIGRP feasibility, IS-IS NSAP</h3>
+    <h4>OSPF cost = 100 Mbps / BW</h4>
+    <div class="demo">
+      <div class="demo-title">OSPF cost kalkulátor</div>
+      <div class="demo-controls">
+        <label>Bandwidth (Mbps): <input type="number" id="ospf-bw" value="100"></label>
+        <button class="btn" id="ospf-calc">Spočítat</button>
+      </div>
+      <div class="demo-output" id="ospf-out">Klikněte „Spočítat"</div>
+    </div>
+
+    <h4>EIGRP feasibility condition: RD<sub>v</sub> &lt; FD</h4>
+    <p>Pokud má soused k cíli <em>striktně kratší</em> cestu než znáš ty, nevede přes tebe smyčka. Konzervativní, ale nikdy nepřijme loop.</p>
+    <svg viewBox="0 0 600 220" style="background:white;border:1px solid var(--border);border-radius:4px;max-width:600px;display:block;margin:8px auto">
+      <!-- EIGRP topology -->
+      <circle cx="100" cy="80" r="22" fill="var(--bg-card)" stroke="var(--accent)" stroke-width="2"/>
+      <text x="100" y="86" text-anchor="middle" font-family="monospace" font-size="14">A</text>
+      <circle cx="300" cy="80" r="22" fill="var(--bg-card)" stroke="var(--accent)" stroke-width="2"/>
+      <text x="300" y="86" text-anchor="middle" font-family="monospace" font-size="14">B</text>
+      <circle cx="500" cy="80" r="22" fill="var(--bg-card)" stroke="var(--accent)" stroke-width="2"/>
+      <text x="500" y="86" text-anchor="middle" font-family="monospace" font-size="14">cíl</text>
+      <circle cx="300" cy="180" r="22" fill="var(--bg-card)" stroke="var(--accent-2)" stroke-width="2"/>
+      <text x="300" y="186" text-anchor="middle" font-family="monospace" font-size="14">C</text>
+      <line x1="120" y1="80" x2="280" y2="80" stroke="#888" stroke-width="2"/>
+      <line x1="320" y1="80" x2="480" y2="80" stroke="#888" stroke-width="2"/>
+      <line x1="115" y1="95" x2="285" y2="170" stroke="#888" stroke-width="2"/>
+      <line x1="315" y1="170" x2="485" y2="95" stroke="#888" stroke-width="2"/>
+      <text x="200" y="72" text-anchor="middle" font-size="11" fill="var(--text-muted)">cost 10</text>
+      <text x="400" y="72" text-anchor="middle" font-size="11" fill="var(--text-muted)">cost 5</text>
+      <text x="180" y="145" font-size="11" fill="var(--text-muted)">cost 3</text>
+      <text x="410" y="145" font-size="11" fill="var(--text-muted)">cost 8</text>
+      <text x="100" y="135" text-anchor="middle" font-size="11">FD<sub>A</sub>=15 (přes B)</text>
+      <text x="500" y="135" text-anchor="middle" font-size="11">B→cíl: 5</text>
+      <text x="300" y="220" text-anchor="middle" font-size="11">C→cíl: 8, RD pro A: 8 &lt; FD=15 ✓ feasible</text>
+    </svg>
+  </div>
+
+  <div class="subtopic">
+    <h3>BGP — path-vector pro AS</h3>
+    <p>TCP port 179. Pravidla výběru cesty v <span class="key">přesně tomto pořadí</span>:</p>
+    <div class="demo">
+      <div class="demo-title">BGP route selection (11 stupňů)</div>
+      <p style="font-size:13px;margin-bottom:8px">Pro prefix <code>10.0.0.0/16</code> máme 3 kandidátní cesty. Která vyhraje?</p>
+      <table id="bgp-table" style="background:white">
+        <thead><tr>
+          <th>Cesta</th><th>Weight</th><th>LOCAL_PREF</th><th>Locally gen.</th><th>AS-PATH</th><th>ORIGIN</th><th>MED</th><th>eBGP/iBGP</th>
+        </tr></thead>
+        <tbody id="bgp-rows"></tbody>
+      </table>
+      <button class="btn" id="bgp-decide" style="margin-top:8px">Vyber nejlepší</button>
+      <button class="btn btn-secondary" id="bgp-shuffle" style="margin-top:8px">Náhodné cesty</button>
+      <div class="demo-output" id="bgp-result" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>OSPF LSA flooding</h3>
+    <p>Při změně topologie router zaplaví celou oblast LSA paketem. Sousedi přepošlou všem svým sousedům (kromě toho, od koho LSA přišlo). LSDB se replikuje napříč oblastí.</p>
+    <div class="demo">
+      <div class="demo-title">LSA flooding animace</div>
+      <div class="demo-howto">
+        <strong>Jak to funguje</strong>
+        Topologie 8 routerů. R1 detekuje změnu a vygeneruje LSA. Každý klik = jedna BFS vlna
+        flooding — LSA se rozšíří k novým sousedům (kromě toho, od koho přišlo, „split horizon"
+        princip). Červené šipky ukazují aktuální vlnu, zelené uzly už mají LSA v LSDB.
+        Po posledním kroku je LSDB konvergována na všech routerech.
+      </div>
+      <div class="demo-controls">
+        <button class="btn" id="lsa-flood">Spustit flooding z R1</button>
+        <button class="btn btn-secondary" id="lsa-reset">Reset</button>
+      </div>
+      <svg id="lsa-svg" viewBox="0 0 700 360" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <ol class="step-list" id="lsa-steps"></ol>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>EIGRP DUAL — feasibility condition</h3>
+    <p>Reported Distance (RD) souseda musí být <span class="key">striktně menší</span> než Feasible Distance (FD). Pokud má soused k cíli kratší cestu než znáš ty, nevede přes tebe smyčka. Konzervativní, ale <em>nikdy</em> nepřijme loop.</p>
+    <div class="demo">
+      <div class="demo-title">Feasibility check kalkulátor</div>
+      <div class="demo-controls">
+        <label>Vaše FD: <input type="number" id="eigrp-fd" value="15"></label>
+        <label>Soused B inzeruje RD: <input type="number" id="eigrp-rdb" value="8"></label>
+        <label>Soused C inzeruje RD: <input type="number" id="eigrp-rdc" value="20"></label>
+        <button class="btn" id="eigrp-check">Vyhodnoť feasibility</button>
+      </div>
+      <svg id="eigrp-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="eigrp-out"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>IS-IS NSAP adresa</h3>
+    <p>CLNS NSAP formát čte se zprava doleva. NSEL (1 B) je selector, System ID (6 B) identifikuje uzel, Area ID je v prostředku, AFI (1 B) označuje formát. Příklad: <code>49.0001.1234.5678.9012.00</code>.</p>
+    <div class="demo">
+      <div class="demo-title">NSAP parser</div>
+      <div class="demo-controls">
+        <label>NSAP: <input type="text" id="nsap-input" value="49.0001.1234.5678.9012.00" style="width:280px"></label>
+        <button class="btn" id="nsap-parse">Parse</button>
+      </div>
+      <div class="demo-output large" id="nsap-out"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>MPLS — L2.5 label switching</h3>
+    <p>Label 32 bitů: <span class="num">20</span> bitů label, <span class="num">3</span> EXP (QoS), <span class="num">1</span> S (bottom-of-stack), <span class="num">8</span> TTL.</p>
+    <div class="demo">
+      <div class="demo-title">MPLS LSP simulátor (PUSH / SWAP / POP)</div>
+      <button class="btn" id="mpls-play">Pošli paket</button>
+      <button class="btn btn-secondary" id="mpls-reset">Reset</button>
+      <svg id="mpls-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px;margin-top:8px"></svg>
+      <div class="demo-output" id="mpls-info" style="margin-top:8px;font-size:13px"></div>
+    </div>
+
+    <h4>Label stack — tunelování v MPLS</h4>
+    <p>MPLS umí stackovat víc labelů (S bit = bottom-of-stack). Vnější label pro core (P routery), vnitřní pro service (např. VPN nebo TE tunel).</p>
+    <div class="demo">
+      <div class="demo-title">MPLS label stack visualizér</div>
+      <div class="demo-controls">
+        <label>Hloubka stacku: <input type="number" id="stack-depth" value="3" min="1" max="5"></label>
+        <button class="btn" id="stack-show">Zobrazit</button>
+      </div>
+      <svg id="stack-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+    </div>
+  </div>
+</section>
+
+<!-- ============== TOPIC 3: SWITCHES ============== -->
+<section id="tab-t3" class="topic">
+  <h2>3. Architektura přepínačů</h2>
+  <p class="topic-intro">Přepínač předává rámce mezi porty podle MAC. Tato kapitola je o <em>vnitřní struktuře</em> — jak rámec proteče od vstupního portu k výstupnímu. Kombinatorický problém (paralelismus) a inženýrský (cena).</p>
+
+  <div class="subtopic">
+    <h3>Teoretický úvod</h3>
+    <p><strong>Co dělá přepínač uvnitř.</strong> Přepínač pracuje na L2 a předává rámce mezi porty na základě cílové MAC adresy. Vnitřně se skládá z <span class="key">line cards</span> (vstupní/výstupní karty) připojených k <span class="key">switch fabric</span> (přepínacímu poli), které řídí <em>controller</em> a <em>scheduler</em>. Funkčně jde o čtyři komponenty: fabric interface chip (rozsekává příchozí pakety na buňky pevné délky), vstupní/výstupní buffer, přepínací pole, a controller + scheduler.</p>
+    <p><strong>Tři jednostupňové architektury</strong> v rostoucí složitosti: <em>sdílená sběrnice</em> (všichni na jedné — v daný moment komunikuje jen jeden, šířka <code>w = N·R/r</code>), <em>sdílená paměť</em> (centrální FIFO, paměť musí stíhat <code>2NR</code>), <em>crossbar</em> (N² crosspointů, interně neblokující). Pro stovky portů jsou všechny tři neproveditelné — odsud potřeba vícestupňových sítí.</p>
+    <p><strong>Head-of-line (HoL) blocking</strong> je klasický problém: paket v čele FIFO čeká na svůj výstup a blokuje i pakety za sebou s volným výstupem. Karol-Hluchyj-Morgan 1987 dokázali, že maximální propustnost FIFO crossbaru je <code>2 − √2 ≈ 58,6 %</code> pro uniform Bernoulli traffic. Řešení: <span class="key">VOQ (Virtual Output Queues)</span> — na každém vstupním portu samostatná fronta pro každý výstup, celkem N² front.</p>
+    <p><strong>Problém párování.</strong> Scheduler v crossbaru s VOQ řeší bipartitní matching mezi vstupy a výstupy. Maximum matching je drahé (O(N^(5/2))), v praxi stačí <em>maximal matching</em>. Tři klasické algoritmy: <em>Take-a-Ticket</em> (lístky podle pořadí), <em>PIM</em> (random Request/Grant/Accept v iteracích), <em>iSLIP</em> (deterministická rotace ukazatelů, dnes komerční standard).</p>
+    <p><strong>Vícestupňové sítě (Clos 1953, Beneš 1962).</strong> Místo jednoho velkého crossbaru poskládáme menší do stupňů. <em>Clos(m, n, r)</em> má tři stupně: r vstupních (n×m), m středních (r×r), r výstupních (m×n). Closova věta: síť je <em>strictly nonblocking</em> právě když <span class="key">m ≥ 2n − 1</span>. Pokud jen <code>m ≥ n</code>, síť je <em>rearrangeably nonblocking</em> (jdou nová spojení, ale možná je nutné přeskládat existující). Beneš je rekurzivní konstrukce z 2×2 přepínačů s počtem stupňů <code>2log₂N − 1</code>.</p>
+    <p><strong>Souvislost s moderním cloud computingem:</strong> leaf-spine topologie v datacentrech je v podstatě <em>zploštělý Clos</em>. Closova teorie ze šedesátých let je dodnes základem Facebook Fabric, Google Jupiter a všech velkých datacenter.</p>
+  </div>
+
+  <div class="subtopic">
+    <h3>Tři jednostupňové architektury</h3>
+    <div class="grid-3">
+      <div class="card">
+        <h5>Sdílená sběrnice</h5>
+        Všechny porty na jedné sběrnici. Šířka <code>w = R·N/r</code>. Pro 1 Gb × 16 portů na 40 MHz: <span class="warn">400 bitů</span> — neproveditelné.
+      </div>
+      <div class="card">
+        <h5>Sdílená paměť</h5>
+        Centrální paměť, FIFO na port. Musí stíhat <code>2NR</code>. Od 10 Gb/s nestačí DRAM (~5 ns přístup).
+      </div>
+      <div class="card">
+        <h5>Crossbar (křížový)</h5>
+        N² crosspointů, interně neblokující. Paralelní přenosy. Trpí HoL bez VOQ. Limit ~128 portů.
+      </div>
+    </div>
+
+    <h4>Bus / Memory / Crossbar — kalkulátor parametrů</h4>
+    <div class="demo">
+      <div class="demo-title">Spočítej, kdy která architektura nestíhá</div>
+      <div class="demo-controls">
+        <label>Porty N: <input type="number" id="sw-n" value="16"></label>
+        <label>Rychlost R (Gb/s): <input type="number" id="sw-r" value="1" step="0.1"></label>
+        <label>Hodiny r (MHz): <input type="number" id="sw-clk" value="40"></label>
+        <label>Buňka C (B): <input type="number" id="sw-cell" value="40"></label>
+        <button class="btn" id="sw-calc">Spočítat</button>
+      </div>
+      <div class="demo-output large" id="sw-out">Klikněte „Spočítat"</div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>HoL blokování a VOQ</h3>
+    <p>Karol-Hluchyj-Morgan 1987: maximální propustnost FIFO crossbaru je <code>2 − √2 ≈ 58,6 %</code> pro uniform Bernoulli traffic.</p>
+    <div class="demo">
+      <div class="demo-title">HoL demo — toggle VOQ</div>
+      <div class="demo-controls">
+        <label><input type="checkbox" id="hol-voq"> Zapnout VOQ (Virtual Output Queues)</label>
+        <button class="btn" id="hol-step">Krok</button>
+        <button class="btn btn-secondary" id="hol-reset">Reset</button>
+      </div>
+      <svg id="hol-svg" viewBox="0 0 700 280" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="hol-info" style="margin-top:8px;font-size:13px"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Plánovací algoritmy — Take-a-Ticket, PIM, iSLIP</h3>
+    <p>V crossbaru s VOQ řeší scheduler bipartitní matching mezi vstupy a výstupy.</p>
+    <div class="demo">
+      <div class="demo-title">Matching algoritmy — porovnání tří přístupů</div>
+      <div class="demo-howto">
+        <strong>Jak to funguje</strong>
+        Demo postupuje ve <em>třech fázích</em> na iteraci: <code>① REQUEST</code> (každá VOQ buňka pošle žádost — šedá tečkovaná čára), <code>② GRANT</code> (výstup vybere jednu — terakotová plná), <code>③ ACCEPT</code> (vstup akceptuje jeden grant — tlustá zelená = výsledné párování). Tlačítko mění label podle další fáze. Klikněte na buňku VOQ pro toggle paketu. iSLIP zobrazuje pointery <code>aP</code>/<code>gP</code> u uzlů.
+      </div>
+      <div class="demo-controls">
+        <label>Algoritmus:
+          <select id="match-algo">
+            <option value="ticket">Take-a-Ticket</option>
+            <option value="pim" selected>PIM (náhodný)</option>
+            <option value="islip">iSLIP (deterministický)</option>
+          </select>
+        </label>
+        <label>Velikost: <select id="match-n">
+          <option value="4">4×4</option>
+          <option value="6">6×6</option>
+          <option value="8">8×8</option>
+        </select></label>
+        <button class="btn" id="match-step">Další iterace</button>
+        <button class="btn btn-secondary" id="match-newreq">Nové žádosti</button>
+        <button class="btn btn-secondary" id="match-reset">Reset</button>
+      </div>
+      <svg id="match-svg" viewBox="0 0 720 420" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <ol class="step-list" id="match-steps"></ol>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:6px">Klikněte na buňku v <strong>levé mřížce VOQ</strong> pro nastavení/odebrání paketu k výstupu. Pak „Další iterace".</p>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>ESLIP — multicast s fanout splitting</h3>
+    <p>Naivní multicast (replikace per výstup) je neefektivní. ESLIP rozsvítí <em>víc crosspointů na řádku vstupu</em> najednou. <em>No fanout splitting</em>: přenos všem výstupům v jednom slotu. <em>Fanout splitting</em>: po částech, když je flexibilnější.</p>
+    <div class="demo">
+      <div class="demo-title">ESLIP multicast simulátor</div>
+      <div class="demo-controls">
+        <label>Mód: <select id="eslip-mode">
+          <option value="no">No fanout splitting</option>
+          <option value="yes" selected>Fanout splitting</option>
+        </select></label>
+        <label>Multicast cíle (čárkou): <input type="text" id="eslip-targets" value="0,1,3" style="width:140px"></label>
+        <button class="btn" id="eslip-step">Krok</button>
+        <button class="btn btn-secondary" id="eslip-reset">Reset</button>
+      </div>
+      <svg id="eslip-svg" viewBox="0 0 700 320" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="eslip-info"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Priority iSLIP — QoS</h3>
+    <p>Pro každou prioritu <em>k</em> oddělené VOQ a vlastní ukazatele <code>I<sub>i</sub><sup>k</sup></code>, <code>O<sub>j</sub><sup>k</sup></code>. Vyhrává nejvyšší přítomná priorita. Příklad: 4 priority na 16×16 = 64 VOQ na vstupní port.</p>
+    <div class="demo">
+      <div class="demo-title">Priority scheduling visualizér</div>
+      <div class="demo-controls">
+        <button class="btn" id="pri-add-hi">Přidej HI prioritu</button>
+        <button class="btn" id="pri-add-lo">Přidej LO prioritu</button>
+        <button class="btn" id="pri-step">Krok scheduleru</button>
+        <button class="btn btn-secondary" id="pri-reset">Reset</button>
+      </div>
+      <svg id="pri-svg" viewBox="0 0 700 280" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="pri-info"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Vícestupňové sítě — Clos &amp; Beneš</h3>
+    <p>Closova věta: <code>Clos(m, n, r)</code> je <span class="key">strictly nonblocking</span> právě tehdy, když <span class="num">m ≥ 2n − 1</span>. Pokud <span class="num">m ≥ n</span>, je <span class="key">rearrangeably nonblocking</span>.</p>
+    <div class="demo">
+      <div class="demo-title">Clos network builder</div>
+      <div class="demo-controls">
+        <label>m (středních): <input type="number" id="clos-m" value="7" min="1" max="12"></label>
+        <label>n (vstupů/blok): <input type="number" id="clos-n" value="4" min="2" max="8"></label>
+        <label>r (vstupních bloků): <input type="number" id="clos-r" value="2" min="2" max="6"></label>
+        <button class="btn" id="clos-draw">Postav síť</button>
+      </div>
+      <svg id="clos-svg" viewBox="0 0 700 360" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output large" id="clos-info"></div>
+    </div>
+
+    <h4>Beneš BN<sub>n</sub> — rekurzivní 2×2</h4>
+    <div class="demo">
+      <div class="demo-title">Beneš builder</div>
+      <div class="demo-controls">
+        <label>n (2<sup>n</sup> portů): <input type="number" id="benes-n" value="3" min="1" max="5"></label>
+        <button class="btn" id="benes-draw">Postav síť</button>
+      </div>
+      <svg id="benes-svg" viewBox="0 0 800 360" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output large" id="benes-info"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== TOPIC 4: ROUTERS ============== -->
+<section id="tab-t4" class="topic">
+  <h2>4. Architektura směrovačů</h2>
+  <p class="topic-intro">Směrovač pracuje na L3, ale uvnitř obsahuje <em>přepínač</em>. Oddělení control plane (BGP/OSPF výpočty) od data plane (forwarding) je <span class="key">základ moderní architektury</span> — i SDN je extrémní forma tohoto rozdělení.</p>
+
+  <div class="subtopic">
+    <h3>Teoretický úvod</h3>
+    <p><strong>Co dělá směrovač.</strong> Směrovač má dvě základní operace, které se v moderních zařízeních <span class="key">oddělují</span>: <em>směrování (routing)</em> = výpočet cest a údržba RIB (control plane); <em>přepínání paketů (forwarding)</em> = faktický přenos podle FIB (data plane). Toto oddělení je nezbytné, protože tyto problémy mají úplně jiné požadavky: routing protokoly (BGP, OSPF) zpracovávají stovky aktualizací/s s komplexní logikou (chce CPU), forwarding zpracovává miliony paketů/s jednoduchým lookupem (chce ASIC).</p>
+    <p><strong>RIB vs FIB.</strong> RIB drží <em>všechny</em> známé cesty (od všech protokolů, různých záloh), FIB drží <em>jen vítěznou</em> s předkompilovanou L2 hlavičkou. Mýtus „RIB a FIB jsou totéž" je špatný — RIB se mění při každém routing update, FIB se mění jen tehdy, když změna vyústí v jiný winner.</p>
+    <p><strong>Šest funkčních modulů</strong> klasického routeru: Network Interface, Forwarding Engine, Queue Manager, Traffic Manager, Backplane, Route Control Processor. Mezi sebou si předávají <em>kontext paketu</em> — datovou strukturu s metadaty (vstupní port, L2/L3 informace, next-hop), takže nemusí opakovaně parsovat hlavičky.</p>
+    <p><strong>Slow path vs Fast path.</strong> Fast Path = HW (ASIC), zpracovává drtivou většinu paketů (běžný IP forward). Slow Path = CPU, řeší pakety, kde HW nestačí: ARP request (chybí L2 hlavička), IP options (record route, source route), generování ICMP zpráv (Time Exceeded), fragmentaci, BGP/OSPF/SNMP pakety pro samotný router. <em>IPv4 router smí fragmentovat, IPv6 ne</em> — to je distinkce, kterou Matoušek u zkoušky kontroluje.</p>
+    <p><strong>Tři generace přepínání ve směrovači</strong>, postupné předpočítávání. <em>Process Switching</em> — každý paket na CPU s plným RIB lookupem, per-packet load balancing. <em>Fast Switching</em> — Fast Cache s předpočítanou L2 hlavičkou, ale první paket toku je pomalý. <em>CEF (Cisco Express Forwarding)</em> — předpočítá celý FIB z RIB jako 256-way mtrie + Adjacency Table, ještě <span class="key">před</span> příchodem prvního paketu. Žádný cache miss penalty.</p>
+  </div>
+
+  <div class="subtopic">
+    <h3>RIB vs FIB</h3>
+    <p>RIB drží <em>všechny</em> známé cesty, FIB drží <em>jen vítěznou</em> s předkompilovanou L2 hlavičkou.</p>
+    <div class="demo">
+      <div class="demo-title">RIB → FIB kompilace</div>
+      <button class="btn" id="rib-add">Přidej cestu (OSPF/BGP)</button>
+      <button class="btn btn-secondary" id="rib-reset">Reset</button>
+      <div class="grid-2" style="margin-top:10px">
+        <div>
+          <h5 style="font-size:13px;margin-bottom:6px">RIB (všechny cesty)</h5>
+          <table style="background:white"><thead><tr><th>Prefix</th><th>Zdroj</th><th>AD</th><th>Metrika</th><th>Next-hop</th></tr></thead><tbody id="rib-rows"></tbody></table>
+        </div>
+        <div>
+          <h5 style="font-size:13px;margin-bottom:6px">FIB (jen vítězové)</h5>
+          <table style="background:white"><thead><tr><th>Prefix</th><th>Out-IF</th><th>Dst MAC</th></tr></thead><tbody id="fib-rows"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Šest funkčních modulů a kontext paketu</h3>
+    <div class="demo">
+      <div class="demo-title">Paket projde routerem — sledujte vývoj kontextu</div>
+      <div class="demo-controls">
+        <button class="btn" id="ctx-step">Další fáze</button>
+        <button class="btn btn-secondary" id="ctx-reset">Reset</button>
+        <span id="ctx-phase-label" style="font-weight:600"></span>
+      </div>
+      <svg id="ctx-svg" viewBox="0 0 700 280" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <table style="background:white;margin-top:8px">
+        <thead><tr><th>Položka kontextu</th><th>Hodnota</th></tr></thead>
+        <tbody id="ctx-rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Pomalá vs rychlá cesta</h3>
+    <p><span class="key">Fast Path</span> — HW (ASIC), drtivá většina paketů. <span class="warn">Slow Path</span> — CPU, kde HW nestačí.</p>
+    <div class="demo">
+      <div class="demo-title">Klasifikátor: kde paket půjde?</div>
+      <div class="demo-controls">
+        <label>Typ paketu:
+          <select id="slowfast-type">
+            <option>Obyčejný IP forward (next-hop známý)</option>
+            <option>Forward, ARP záznam expiroval (glean)</option>
+            <option>IP options (Record Route)</option>
+            <option>TTL = 1, generovat ICMP Time Exceeded</option>
+            <option>Fragment, MTU překročeno</option>
+            <option>BGP update (TCP port 179, dst = my IP)</option>
+            <option>SNMP get-request</option>
+            <option>Multicast IGMP report</option>
+          </select>
+        </label>
+        <button class="btn" id="slowfast-check">Klasifikuj</button>
+      </div>
+      <div class="demo-output large" id="slowfast-out"></div>
+    </div>
+
+    <h4>IPv4 vs IPv6 fragmentace</h4>
+    <div class="grid-2">
+      <div class="card">
+        <h5>IPv4 — router smí fragmentovat</h5>
+        Mění: Identifier, MF, Fragment Offset, Total Length, Header Checksum. Defragmentace <em>jen na cílovém hostu</em>.
+      </div>
+      <div class="card">
+        <h5>IPv6 — router nesmí</h5>
+        Při menším MTU paket zahodí + pošle ICMPv6 Packet Too Big. Odesílatel musí používat PMTUD.
+      </div>
+    </div>
+
+    <h4>IPv4 fragmentace — krok za krokem (Matouškova oblíbená otázka)</h4>
+    <p>Matoušek u zkoušky chce pět minut detailů: co se mění v hlavičce, kdo skládá, co když se ztratí fragment.</p>
+    <div class="demo">
+      <div class="demo-title">Interaktivní fragmentace</div>
+      <div class="demo-controls">
+        <label>Velikost paketu (B): <input type="number" id="frag-size" value="3000" min="100" max="9000"></label>
+        <label>MTU rozhraní (B): <input type="number" id="frag-mtu" value="1500" min="68" max="9000"></label>
+        <button class="btn" id="frag-go">Fragmentuj</button>
+      </div>
+      <svg id="frag-svg" viewBox="0 0 700 320" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <table style="background:white;margin-top:8px;font-size:13px" id="frag-table">
+        <thead><tr><th>Fragment</th><th>ID</th><th>MF</th><th>Offset</th><th>Total Length</th><th>Data</th></tr></thead>
+        <tbody id="frag-rows"></tbody>
+      </table>
+      <div class="demo-output" id="frag-info"></div>
+    </div>
+
+    <h4>IP header změny během forwarding</h4>
+    <div class="demo">
+      <div class="demo-title">Sledujte, co se mění v IP hlavičce</div>
+      <div class="demo-controls">
+        <label>Scénář:
+          <select id="hdr-scenario">
+            <option value="normal">Normální forward</option>
+            <option value="nat">NAT (Inside→Outside)</option>
+            <option value="frag">Fragmentace (MTU pokles)</option>
+            <option value="ttl">TTL expiroval</option>
+          </select>
+        </label>
+        <button class="btn" id="hdr-show">Zobrazit změny</button>
+      </div>
+      <table style="background:white;font-size:13px" id="hdr-table">
+        <thead><tr><th>Pole</th><th>Před</th><th>Po</th><th>Změna</th></tr></thead>
+        <tbody id="hdr-rows"></tbody>
+      </table>
+    </div>
+
+    <h4>Path MTU Discovery (PMTUD)</h4>
+    <div class="demo">
+      <div class="demo-title">PMTUD — najdi minimální MTU na cestě</div>
+      <div class="demo-controls">
+        <button class="btn" id="pmtud-play">Spusti</button>
+        <button class="btn btn-secondary" id="pmtud-reset">Reset</button>
+      </div>
+      <svg id="pmtud-svg" viewBox="0 0 700 280" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <ol class="step-list" id="pmtud-steps"></ol>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Process Switching / Fast Switching / CEF</h3>
+    <p>Postupné předpočítávání: nic → cache po prvním paketu → vše předem.</p>
+    <div class="demo">
+      <div class="demo-title">Porovnání tří generací — timing</div>
+      <div class="demo-controls">
+        <label>Počet paketů toku: <input type="number" id="cef-count" value="100" min="1" max="10000"></label>
+        <label>Změna RIB během toku: <input type="checkbox" id="cef-change"></label>
+        <button class="btn" id="cef-run">Simulovat</button>
+      </div>
+      <svg id="cef-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output large" id="cef-info"></div>
+    </div>
+
+    <h4>CEF 256-way mtrie — IPv4 lookup</h4>
+    <div class="demo">
+      <div class="demo-title">CEF lookup demonstrace</div>
+      <div class="demo-controls">
+        <label>Cílová IP: <input type="text" id="cef-ip" value="10.5.23.7"></label>
+        <button class="btn" id="cef-lookup">Lookup</button>
+      </div>
+      <svg id="cef-trie-svg" viewBox="0 0 700 200" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="cef-result"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== TOPIC 5: CLASSIFICATION ============== -->
+<section id="tab-t5" class="topic">
+  <h2>5. Klasifikace paketů</h2>
+  <p class="topic-intro">Klasifikace roztřídí pakety do tříd a přiřadí akci (permit/deny/forward). Pozor: <span class="key">klasifikace ≠ seřazování</span> — ta je práce scheduleru.</p>
+
+  <div class="subtopic">
+    <h3>Teoretický úvod</h3>
+    <p><strong>Definice klasifikátoru.</strong> Klasifikátor je datová struktura obsahující množinu pravidel <em>R = {R₁, ..., R<sub>N</sub>}</em>, kde každé pravidlo je <em>K</em>-tice hodnot v jednotlivých <span class="key">dimenzích</span> (sledovaných polích hlavičky). Pro paket s hlavičkou H hledáme <em>první nebo nejlepší</em> pravidlo, které se s H shoduje. Pravidla se porovnávají třemi způsoby: <em>exact match</em> (přesná shoda — port), <em>prefix match</em> (LPM — IP prefix), <em>interval match</em> (port v rozsahu).</p>
+    <p><strong>Pět hlavních použití:</strong> packet filtering (ACL, firewall), IP address lookup (1D s LPM), QoS (DSCP, porty), NAT, DPI (L7 — Snort, Suricata).</p>
+    <p><strong>Klíčový rozdíl ACL vs IP lookup.</strong> V ACL <em>záleží na pořadí</em> — aplikuje se první vhodné pravidlo. U IP lookup pořadí je <em>irelevantní</em> a aplikuje se <em>longest prefix match</em>. Matoušek na tom rád chytá.</p>
+    <p><strong>Klasifikace podle dimenzí.</strong> <em>1D</em> = jedna dimenze (typicky IP cíl při routingu). <em>2D</em> = src + dst IP. <em>nD</em> = více polí současně (ACL: src/dst IP, src/dst port, proto).</p>
+    <p><strong>Hierarchie 1D struktur:</strong> binární trie (O(W) hloubka, ale po jednom bitu) → multibitový trie (O(W/k), prefix expansion za cenu $2^k$ paměti na uzel) → LC-trie (Lulea) s bitmapovou kompresí. CEF používá 256-way mtrie (stride=8).</p>
+    <p><strong>Hierarchie 2D struktur</strong> jako evoluce trade-offu: hierarchické stromy (rychlé, ale O(N^K) paměť) → backtracking (málo paměti, pomalé) → grid-of-tries se switch pointers (předpočítané přechody — kompromis). <span class="key">HiCuts</span> rozděluje n-rozměrný prostor řezy stejné velikosti do rozhodovacího stromu.</p>
+    <p><strong>nD algoritmy:</strong> <em>Lucent Bit Vector</em> (bitový AND přes dimenze, rychlé ale paměťově náročné), <em>Cross Producting / RFC</em> (předpočítaný hash, prostorová exploze), <em>HiCuts/HyperCuts</em> (geometrické dělení), <em>TCAM</em> (hardware, 1 cyklus, drahé). TCAM má buňku se 3 stavy (0/1/X) implementovanou bitovou maskou, paralelní porovnání + priority encoder.</p>
+  </div>
+
+  <div class="subtopic">
+    <h3>ACL vs IP lookup</h3>
+    <p>V <span class="key">ACL</span> záleží na pořadí — aplikuje se <em>první vhodné</em> pravidlo. V <span class="key">IP lookup</span> pořadí nezáleží — vítězí <em>nejdelší prefix (LPM)</em>.</p>
+    <div class="demo">
+      <div class="demo-title">ACL chyba — najděte zastíněné pravidlo</div>
+      <table style="background:white">
+        <thead><tr><th>#</th><th>Akce</th><th>Proto</th><th>Src</th><th>Dst</th><th>Port</th><th>Zastíněno?</th></tr></thead>
+        <tbody>
+          <tr><td>10</td><td>permit</td><td>TCP</td><td>147.229.0.0/16</td><td>any</td><td>dst 80</td><td id="acl1"></td></tr>
+          <tr><td>20</td><td>permit</td><td>UDP</td><td>147.229.0.0/16</td><td>any</td><td>dst 53</td><td id="acl2"></td></tr>
+          <tr><td>30</td><td>permit</td><td>ICMP</td><td>147.229.0.0/16</td><td>any</td><td>—</td><td id="acl3"></td></tr>
+          <tr><td>40</td><td>deny</td><td>ICMP</td><td>147.229.1.15/32</td><td>any</td><td>—</td><td id="acl4"></td></tr>
+          <tr><td>50</td><td>deny</td><td>IP</td><td>any</td><td>any</td><td>—</td><td id="acl5"></td></tr>
+        </tbody>
+      </table>
+      <button class="btn" id="acl-check" style="margin-top:8px">Najít chybu</button>
+      <div class="demo-output" id="acl-result" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>1D — binární a vícebitový trie</h3>
+    <div class="demo">
+      <div class="demo-title">Trie builder + LPM lookup</div>
+      <div class="demo-howto">
+        <strong>Jak to funguje</strong>
+        Zadejte sadu binárních prefixů (oddělených čárkou, hvězdička značí konec). Změnou
+        <em>stride</em> přepínáte mezi binárním (stride 1, po 1 bitu) a vícebitovým trie
+        (stride 2/3/4 = 4/8/16-cestný uzel). Krátké prefixy se musí <em>expandovat</em>
+        do násobků stride (např. <code>0*</code> se stride 3 → <code>000*, 010*, 011*</code>).
+        Modré uzly mají uložené pravidlo, šedé jsou „průchozí". Zadejte klíč a klikněte „LPM"
+        pro nalezení nejdelšího prefixu.
+      </div>
+      <div class="demo-controls">
+        <label>Mód:
+          <select id="trie-mode">
+            <option value="binary">Binární trie (stride 1)</option>
+            <option value="stride2">Vícebitový (stride 2)</option>
+            <option value="stride3" selected>Vícebitový (stride 3)</option>
+            <option value="stride4">Vícebitový (stride 4)</option>
+          </select>
+        </label>
+        <label>Prefixy: <input type="text" id="trie-prefixes" value="0*,00001*,001*,1*,1000*,1001*,1010*,1011*,111*" style="width:300px"></label>
+        <button class="btn" id="trie-build">Sestav</button>
+      </div>
+      <div class="demo-controls">
+        <label>Hledej klíč: <input type="text" id="trie-key" value="10010110" style="width:140px"></label>
+        <button class="btn" id="trie-lookup">LPM</button>
+      </div>
+      <svg id="trie-svg" viewBox="0 0 700 360" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="trie-result"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>2D — hierarchické stromy, HiCuts</h3>
+    <p>Tři generace: hierarchické s duplicitou (O(N<sup>K</sup>)) → backtracking → grid-of-tries se switch pointers.</p>
+    <div class="demo">
+      <div class="demo-title">HiCuts — 2D rozhodovací strom</div>
+      <div class="demo-howto">
+        <strong>Jak to funguje</strong>
+        Levý panel: pravidla jako obdélníky v 2D prostoru F1×F2. Pravý panel: rozhodovací strom
+        vytvořený řezy. Algoritmus rekurzivně dělí prostor: vybere dimenzi s největší variabilitou
+        a rozseká ji na <em>spfac</em> stejně velkých řezů. List obsahuje max <em>binth</em> pravidel
+        (potom se použije lineární vyhledávání). Změňte parametry pro různé tradeoff paměť/hloubka.
+      </div>
+      <div class="demo-controls">
+        <label>binth: <input type="number" id="hicuts-binth" value="2" min="1" max="6"></label>
+        <label>spfac: <input type="number" id="hicuts-spfac" value="4" min="2" max="8"></label>
+        <button class="btn" id="hicuts-build">Sestav strom</button>
+        <button class="btn btn-secondary" id="hicuts-newrules">Nová pravidla</button>
+      </div>
+      <div class="grid-2">
+        <svg id="hicuts-geo" viewBox="0 0 320 320" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+        <svg id="hicuts-tree" viewBox="0 0 380 320" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>nD — bitový vektor, kartézský součin</h3>
+    <div class="demo">
+      <div class="demo-title">Lucent Bit Vector — interaktivní AND</div>
+      <div class="demo-howto">
+        <strong>Jak to funguje</strong>
+        6 pravidel, každé má hodnoty v 5 dimenzích (dst/src IP, dst/src port, proto).
+        Pro každou dimenzi paketu se vyhledá LPM a získá bitový vektor (kde bit i = 1 znamená
+        „pravidlo i se shoduje v této dimenzi"). Všech 5 vektorů se AND-uje. <em>První 1</em> ve
+        výsledku ukazuje na vítězné pravidlo. Zadejte vlastní paket dole a klikněte „Klasifikuj".
+      </div>
+      <table style="background:white" id="bv-rules-table">
+        <thead><tr><th>R</th><th>Dst IP</th><th>Src IP</th><th>DstP</th><th>SrcP</th><th>Proto</th><th>Akce</th></tr></thead>
+        <tbody>
+          <tr><td>R1</td><td>147.229.*.*</td><td>*</td><td>25</td><td>*</td><td>*</td><td>permit</td></tr>
+          <tr><td>R2</td><td>147.229.*.*</td><td>*</td><td>53</td><td>*</td><td>UDP</td><td>permit</td></tr>
+          <tr><td>R3</td><td>147.229.*.*</td><td>*</td><td>22</td><td>*</td><td>TCP</td><td>permit</td></tr>
+          <tr><td>R4</td><td>147.229.5.1</td><td>153.13.2.5</td><td>123</td><td>123</td><td>UDP</td><td>permit</td></tr>
+          <tr><td>R5</td><td>*</td><td>117.16.*.*</td><td>*</td><td>*</td><td>IP</td><td>permit</td></tr>
+          <tr><td>R6</td><td>*</td><td>*</td><td>*</td><td>*</td><td>*</td><td>deny</td></tr>
+        </tbody>
+      </table>
+      <div class="demo-controls" style="margin-top:10px">
+        <label>Dst IP: <input type="text" id="bv-dst" value="147.229.5.1"></label>
+        <label>Src IP: <input type="text" id="bv-src" value="153.13.2.5"></label>
+        <label>DstP: <input type="number" id="bv-dport" value="53"></label>
+        <label>SrcP: <input type="number" id="bv-sport" value="1029"></label>
+        <label>Proto: <select id="bv-proto"><option>UDP</option><option>TCP</option><option>ICMP</option></select></label>
+        <button class="btn" id="bv-classify">Klasifikuj</button>
+      </div>
+      <div id="bv-vectors" class="demo-output large"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Prefix expansion — pro multibit trie</h3>
+    <p>Multibit trie vyžaduje, aby všechny prefixy měly délku v <strong>násobcích stride</strong>. Krátké prefixy se proto expandují — jeden prefix se zaplaví do více slotů. Cena: víc paměti, ale rychlejší lookup.</p>
+    <div class="demo">
+      <div class="demo-title">Prefix expansion kalkulátor</div>
+      <div class="demo-controls">
+        <label>Prefix: <input type="text" id="expand-prefix" value="0*" style="width:120px;font-family:monospace"></label>
+        <label>Stride: <input type="number" id="expand-stride" value="3" min="1" max="8"></label>
+        <button class="btn" id="expand-go">Expanduj</button>
+      </div>
+      <div class="demo-output large" id="expand-result"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Kartézský součin (Cross Producting)</h3>
+    <p>Předpočítá tabulku <em>všech kombinací</em> prefixů ve všech dimenzích. Klasifikace je pak jeden hash lookup. Cena: <span class="warn">prostorová exploze</span> — pro 5 dimenzí × 100 prefixů = 10^10 kombinací.</p>
+    <div class="demo">
+      <div class="demo-title">Cross Product table generator</div>
+      <div class="demo-controls">
+        <label>Počet dimenzí: <input type="number" id="cp-dims" value="3" min="2" max="5"></label>
+        <label>Hodnot per dim.: <input type="number" id="cp-vals" value="3" min="2" max="6"></label>
+        <button class="btn" id="cp-gen">Vygeneruj</button>
+      </div>
+      <div class="demo-output large" id="cp-out"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Geometrický pohled na klasifikaci ve 2D</h3>
+    <p>Pravidla = obdélníky v 2D prostoru (F1 × F2). Paket = bod. Klasifikace = najít region s nejvyšší prioritou, který obsahuje bod.</p>
+    <div class="demo">
+      <div class="demo-title">2D rules — klikni pro klasifikaci bodu</div>
+      <button class="btn" id="geo-new">Nová pravidla</button>
+      <button class="btn btn-secondary" id="geo-clear">Vyčisti</button>
+      <svg id="geo-svg" viewBox="0 0 700 360" style="background:white;border:1px solid var(--border);border-radius:4px;cursor:crosshair"></svg>
+      <div class="demo-output" id="geo-info">Klikni do prostoru pro klasifikaci bodu.</div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>TCAM — Ternary CAM</h3>
+    <p>Buňka má 3 stavy: 0, 1, X (don't care). Paralelní porovnání v <em>jednom</em> hodinovém cyklu. Priority encoder vybere první shodu.</p>
+    <div class="demo">
+      <div class="demo-title">TCAM lookup simulátor</div>
+      <div class="demo-howto">
+        <strong>Jak to funguje</strong>
+        TCAM má 9 prefixů seřazených sestupně podle délky masky. Symbol <code>?</code> v hodnotě
+        znamená „don't care" (maska má v daném bitu 0). Po stisku „Lookup" se klíč paralelně porovná
+        se VŠEMI řádky najednou — to je hardware operace v <em>jednom hodinovém cyklu</em>. Priority encoder
+        vrátí <em>nejvyšší shodu</em> (nahoře = nejdelší prefix). Zelený řádek = vítěz.
+      </div>
+      <div class="demo-controls">
+        <label>Klíč (8 bitů): <input type="text" id="tcam-key" value="10010110" maxlength="8" style="width:90px;font-family:monospace"></label>
+        <button class="btn" id="tcam-lookup">Lookup</button>
+      </div>
+      <svg id="tcam-svg" viewBox="0 0 700 280" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="tcam-result"></div>
+      <div class="note">
+        <span class="label">Slabiny TCAM</span>
+        ~16 tranzistorů/buňka (3× dražší než RAM), velký proud (paralelní porovnání), strop ~4000 záznamů, menší hustota. Proto SDN/OpenFlow má limit ~4-8k flow entries na switch.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== TOPIC 6: P2P ============== -->
+<section id="tab-t6" class="topic">
+  <h2>6. Sítě P2P</h2>
+  <p class="topic-intro">Decentralizovaná alternativa ke klient-server. Každý uzel je zároveň klient i server. Žije na aplikační vrstvě jako <em>overlay</em> nad TCP/IP. Příklady: BitTorrent, Bitcoin, Kademlia DHT.</p>
+
+  <div class="subtopic">
+    <h3>Teoretický úvod</h3>
+    <p><strong>Co je P2P síť.</strong> Dynamický soubor nezávislých uzlů (peers), které jsou propojené a jejichž zdroje (objekty) jsou přístupné ostatním uzlům. Sdílené zdroje (CPU, pásmo, disk) jsou <em>přímo dostupné</em> všem uzlům — uzly je nabízejí a využívají zároveň. P2P systémy <em>žijí na aplikační vrstvě</em>, staví se jako <span class="key">overlay</span> nad standardním TCP/IP stackem.</p>
+    <p><strong>Klient-server vs P2P:</strong> klient-server má asymetrický směr provozu, stabilní topologii, single point of failure, garantované QoS. P2P má symetrický směr, dynamickou topologii, robustnost díky distribuci, ale problematickou bezpečnost a <em>negarantovatelné</em> QoS.</p>
+    <p><strong>Pure vs hybrid.</strong> Pure síť — odebrání libovolného uzlu <em>nemá vliv</em> na funkčnost. Hybridní síť používá <em>centrální uzel</em> pro některé služby (autentizace, indexace, bootstrap). Napster je hybrid, Gnutella pure, Bitcoin pure, BitTorrent s trackerem hybrid, BitTorrent přes DHT téměř pure.</p>
+    <p><strong>Klíčové vlastnosti:</strong> samoorganizovatelnost (lokální stav, jako MANET), autonomie (každý uzel se rozhoduje sám, problém free-rider a Byzantine), spolehlivost přes redundanci (replication factor), <em>churn rate</em> (rychlost odchodů uzlů — medián 1 min až 1 den).</p>
+    <p><strong>Referenční model (Aberer 2005)</strong> má 6 komponent: jmenný prostor I, množina zdrojů R, množina uzlů P, mapování F<sub>R</sub>: R → I, F<sub>P</sub>: P → I, struktura overlay. Jmenný prostor má metriku d s 5 vlastnostmi (nezápornost, identita, rovnost, symetrie, trojúhelníková nerovnost).</p>
+    <p><strong>Problém malého světa (Milgram 1967)</strong> je teoretický základ P2P: lokální informace stačí na polynomiální cestu mezi libovolnými dvěma uzly. Kleinberg 2000 to dokázal formálně.</p>
+    <p><strong>Nestrukturované P2P</strong> nemají pevné pravidlo, kde co leží — vyhledávání = prohledávání (záplava, expanding ring, random walk, LMS). <strong>Strukturované P2P</strong> používají DHT (Distributed Hash Table) s deterministickým směrováním — <em>Kademlia</em> s XOR metrikou a k-buckety, <em>BitTorrent</em> nad Kademlií jako Mainline DHT.</p>
+  </div>
+
+  <div class="subtopic">
+    <h3>Problém malého světa (Milgram 1967)</h3>
+    <p>160 dopisů z Omahy do Sharon, MA. <span class="key">44 doručeno</span>, medián <span class="num">5</span> prostředníků. Kleinberg 2000: lokální informace stačí na polynomiální cestu.</p>
+    <svg viewBox="0 0 700 200" style="background:white;border:1px solid var(--border);border-radius:4px;max-width:700px">
+      <!-- Milgram bar chart of chain lengths -->
+      <text x="350" y="20" text-anchor="middle" font-size="14" font-weight="600">Délka řetězce mezičlánků (44 z 160 doručených)</text>
+      <g id="milgram-bars"></g>
+      <line x1="60" y1="170" x2="640" y2="170" stroke="#888"/>
+      <line x1="60" y1="40" x2="60" y2="170" stroke="#888"/>
+      <text x="350" y="195" text-anchor="middle" font-size="12" fill="var(--text-muted)">Počet prostředníků</text>
+    </svg>
+  </div>
+
+  <div class="subtopic">
+    <h3>Nestrukturované sítě — záplava, kruh, walk, LMS</h3>
+    <div class="demo">
+      <div class="demo-title">Animace vyhledávání v P2P</div>
+      <div class="demo-howto">
+        <strong>Jak to funguje</strong>
+        Náhodný P2P graf 14 uzlů, cíl = uzel 11 (zelený). Vyberte metodu:
+        <em>Záplava</em> rozesílá všesměrově s TTL=3, <em>Expanding ring</em> postupně zvětšuje TTL,
+        <em>Random walk</em> posílá jeden „chodec" náhodně, <em>LMS</em> kombinuje walk + deterministický
+        finiš podle metriky vzdálenosti. <em>Krok</em> = jeden krok algoritmu, <em>Auto</em>
+        běží do nalezení nebo vyčerpání.
+      </div>
+      <div class="demo-controls">
+        <label>Metoda:
+          <select id="unstr-method">
+            <option value="flood">Záplava (TTL=3)</option>
+            <option value="ring">Rozšiřující se kruh</option>
+            <option value="walk">Náhodný průchod</option>
+            <option value="lms">LMS (lokální minimum)</option>
+          </select>
+        </label>
+        <button class="btn" id="unstr-step">Krok</button>
+        <button class="btn" id="unstr-auto">Auto</button>
+        <button class="btn btn-secondary" id="unstr-reset">Reset</button>
+      </div>
+      <svg id="unstr-svg" viewBox="0 0 700 360" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="unstr-info" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Kademlia — XOR metrika a k-buckety</h3>
+    <p>160-bit SHA-1 ID. Vzdálenost <code>d(a, b) = a XOR b</code>. Symetrická → každý dotaz je reverzibilní.</p>
+    <div class="demo">
+      <div class="demo-title">XOR vzdálenost kalkulátor</div>
+      <div class="demo-controls">
+        <label>A (binárně): <input type="text" id="xor-a" value="01010" maxlength="8" style="width:100px;font-family:monospace"></label>
+        <label>B: <input type="text" id="xor-b" value="11010" maxlength="8" style="width:100px;font-family:monospace"></label>
+        <button class="btn" id="xor-calc">Vzdálenost</button>
+      </div>
+      <div class="demo-output large" id="xor-result"></div>
+    </div>
+
+    <h4>k-buckety + FIND_VALUE traversal</h4>
+    <div class="demo">
+      <div class="demo-title">Kademlia FIND_VALUE — hop po hopu</div>
+      <div class="demo-howto">
+        <strong>Jak to funguje</strong>
+        Pro síť 32 uzlů s <code>k=3</code> a paralelismus <code>α=2</code>: zadejte vlastní ID a hledaný klíč.
+        Klikejte „▸ Další hop" pro zobrazení dalšího skoku. Šipky postupně přibývají a aktuální skok
+        je tučně. Vlevo dole jsou <em>k-buckety</em> aktuálního uzlu — ukazují, koho vlastník zná
+        ve které vzdálenostní třídě <code>[2^i, 2^(i+1))</code>. Cesta vede vždy k uzlu s menší XOR
+        vzdáleností. <code>FIND_VALUE</code> spustí celou cestu naráz.
+      </div>
+      <div class="demo-controls">
+        <label>Náš ID: <input type="number" id="kad-self" value="2" min="0" max="31"></label>
+        <label>Hledat klíč: <input type="number" id="kad-target" value="26" min="0" max="31"></label>
+        <button class="btn" id="kad-step">▸ Další hop</button>
+        <button class="btn btn-secondary" id="kad-find">FIND_VALUE (auto)</button>
+        <button class="btn btn-secondary" id="kad-reset">Reset</button>
+      </div>
+      <svg id="kad-svg" viewBox="0 0 720 400" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <ol class="step-list" id="kad-steps"></ol>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Chord — DHT na kruhu</h3>
+    <p>Chord (alternativa ke Kademlii) — uzly i klíče leží na kruhu modulo 2<sup>m</sup>. Klíč k se uloží na <em>successor(k)</em> — první uzel po směru hodinových ručiček. Routing přes <em>finger table</em> s 2<sup>i</sup> přeskoky.</p>
+    <div class="demo">
+      <div class="demo-title">Chord ring routing</div>
+      <div class="demo-controls">
+        <label>Zdrojový uzel: <input type="number" id="chord-src" value="8" min="0" max="63"></label>
+        <label>Hledat klíč: <input type="number" id="chord-key" value="54" min="0" max="63"></label>
+        <button class="btn" id="chord-find">Najdi</button>
+      </div>
+      <svg id="chord-svg" viewBox="0 0 700 380" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <ol class="step-list" id="chord-steps"></ol>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>LMS — Local Minima Search step-by-step</h3>
+    <p>LMS kombinuje random walk a směrování podle metriky. Probe putuje sítí, dokud se nedostane do uzlu, který je <em>lokálním minimem</em> metriky <code>d(x, w)</code> v okolí <em>h</em> kroků.</p>
+    <div class="demo">
+      <div class="demo-title">LMS s gradientem metriky</div>
+      <button class="btn" id="lms-step">Krok</button>
+      <button class="btn btn-secondary" id="lms-reset">Reset</button>
+      <svg id="lms-svg" viewBox="0 0 700 360" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="lms-info"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>BitTorrent .torrent metainfo (bencoding)</h3>
+    <p>Bencoding (BEP 003): <code>i&lt;num&gt;e</code> integer, <code>&lt;N&gt;:&lt;str&gt;</code> string, <code>l...e</code> list, <code>d...e</code> dict.</p>
+    <div class="demo">
+      <div class="demo-title">Bencoding decoder</div>
+      <div class="demo-controls">
+        <textarea id="bencode-input" rows="3" style="width:100%;font-family:monospace;font-size:12px">d8:announce41:http://bttracker.debian.org:6969/announce4:infod6:lengthi3977379840e4:name25:debian-12.0-amd64-DVD.iso12:piece lengthi524288eee</textarea>
+        <button class="btn" id="bencode-decode">Decode</button>
+      </div>
+      <pre id="bencode-out" style="background:#1e1e1e;color:#d4d4d4;padding:14px;border-radius:4px;font-size:12px;overflow-x:auto;max-height:240px"></pre>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Sybil útok proti Kademlia</h3>
+    <p>Útočník vytvoří mnoho falešných identit (Sybil nodes). Pokud obsadí dost slotů ve směrovací tabulce oběti, kontroluje, kam jdou dotazy. Obrana: <strong>LRU preference starších kontaktů</strong> — nový uzel <em>nedostane</em> slot, dokud nejstarší přestane odpovídat.</p>
+    <div class="demo">
+      <div class="demo-title">Sybil simulace</div>
+      <div class="demo-controls">
+        <label>Sybil nodů: <input type="number" id="sybil-count" value="50" min="0" max="200"></label>
+        <label>LRU obrana? <input type="checkbox" id="sybil-lru" checked></label>
+        <button class="btn" id="sybil-go">Simuluj</button>
+      </div>
+      <svg id="sybil-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="sybil-info"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>BitTorrent — swarm model</h3>
+    <p>Dva 160-bit identifikátory: <code>peer_id</code> a <code>info_hash</code>. Dvě cesty vyhledávání: tracker + DHT (Mainline DHT, k=8, refresh 15 min).</p>
+    <div class="demo">
+      <div class="demo-title">BitTorrent swarm simulator</div>
+      <div class="demo-controls">
+        <button class="btn" id="bt-join">Přidej peer</button>
+        <button class="btn" id="bt-step">Krok přenosu</button>
+        <button class="btn btn-secondary" id="bt-reset">Reset</button>
+      </div>
+      <svg id="bt-svg" viewBox="0 0 700 360" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="bt-info" style="margin-top:8px;font-size:13px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== TOPIC 7: IDS ============== -->
+<section id="tab-t7" class="topic">
+  <h2>7. Identifikace provozu a detekce anomálií</h2>
+  <p class="topic-intro">Pod portem 443 (HTTPS) může být cokoli. Čtyři techniky podle složitosti: <em>hlavičky → signatury → statistický otisk (SPID) → TLS otisky (JA3/JA4)</em>. Každá další řeší slabinu předchozí.</p>
+
+  <div class="subtopic">
+    <h3>Teoretický úvod</h3>
+    <p><strong>Identifikace provozu</strong> znamená určit, jaký aplikační protokol se v daném toku přenáší, <em>bez ohledu na port</em>. <strong>Detekce anomálií</strong> je o krok výš: rozhodnout, zda je daný provoz <em>normální</em> nebo <em>odchýlený</em> od očekávaného chování. Obojí je srdcem moderních NIDS (Network Intrusion Detection Systems) a NPM (Network Performance Monitoring).</p>
+    <p><strong>Důvody pro identifikaci:</strong> bezpečnost (detekce útoků, filtrování), diagnostika (sledování aplikací), QoS (prioritizace), výkonnost sítě. Hlavní problém: drtivá většina dnešního provozu míří na port 443 (HTTPS), což samo o sobě nic neznamená — pod TLS může běžet web, malware C2, P2P tunnel, exfiltrace.</p>
+    <p><strong>Pořadí čtyř metod je vzestup složitosti.</strong> Hlavičky paketů — nejlevnější, ale fail proti dynamickým portům a šifrování. Signatury (DPI) — fail proti šifrování. Statistický otisk (SPID) — funguje i na šifrovaný provoz. TLS otisky (JA3/JA4) — fungují přesně proto, že provoz je šifrovaný (handshake je veřejný).</p>
+    <p><strong>Signatury a LCS.</strong> Signatura je statický řetězec z hlavičky/těla protokolu. Tři způsoby získání: ze specifikace, reverse engineering, nebo <em>automaticky přes LCS</em> (Longest Common Subsequence — iterativní hledání nejdelšího společného podřetězce mezi více toky stejné aplikace, ustálí se v ~10 iteracích).</p>
+    <p><strong>SPID (Erik Hjelmvik 2008)</strong> využívá statistické i aplikační atributy: PacketSize, PacketDirection, byte frequency, entropy. Porovnává přes <span class="key">Kullback-Leiblerovu divergenci</span> (relativní entropii). KL není symetrická! Empiricky stačí 30 trénovacích toků na protokol a 10 paketů TCP (20 UDP).</p>
+    <p><strong>TLS otisky.</strong> JA3 = MD5 hash z 5 polí Client Hello (Version, Cipher Suites, Extensions, Supported Groups, EC Format). GREASE hodnoty se musí eliminovat. JA4 je modernější se SHA-256 a strukturovanějším formátem (a_b_c). Praktická omezení: konzistence — knihovny, OS a verze mění JA3 mezi verzemi.</p>
+    <p><strong>Detekce anomálií (ADS).</strong> Anomálie = odchylka od očekávaného chování. ADS vytváří model normálního chování (statistický, ML, automaty). Výhoda: rozpozná i útoky, které dosud nebyly popsány. Smrt ADS = vysoké false positives (operátor přestane věřit). Pro průmyslové protokoly (IEC 104) se používají <em>pravděpodobnostní automaty (DPA)</em>, slučované přes <em>Alergia algoritmus</em>.</p>
+  </div>
+
+  <div class="subtopic">
+    <h3>Čtyři metody identifikace</h3>
+    <table>
+      <thead><tr><th>Metoda</th><th>Funguje na</th><th>Slabina</th></tr></thead>
+      <tbody>
+        <tr><td>Hlavičky paketů (port, EtherType, IP protocol)</td><td>Klasické protokoly</td><td>Dynamické porty, tunelování, šifrování</td></tr>
+        <tr><td>Signatury (DPI, regex)</td><td>Známé protokoly s pevnými řetězci</td><td>Šifrování (Snort nevidí obsah TLS)</td></tr>
+        <tr><td>Statistický otisk (SPID, KL div.)</td><td>I šifrovaný a tunelovaný</td><td>False positives, trénink</td></tr>
+        <tr><td>TLS otisky (JA3, JA4)</td><td>Šifrovaný — TLS handshake je veřejný</td><td>Konzistence (knihovny, verze)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="subtopic">
+    <h3>LCS — automatická signatura</h3>
+    <p>Iterativní hledání nejdelšího společného podřetězce. Ustálí se cca v 10 iteracích.</p>
+    <div class="demo">
+      <div class="demo-title">LCS step-by-step</div>
+      <div class="demo-howto">
+        <strong>Jak to funguje</strong>
+        Klikněte „Přidej tok" pro přidání trénovacího toku (5 toků celkem). Po každém přidaném toku
+        se přepočítá <em>kandidátní signatura</em> jako <em>longest common subsequence</em> všech
+        dosavadních toků. Sledujte, jak se signatura postupně zužuje a stabilizuje na invariantní
+        části protokolu. Empiricky se ustálí během ~10 iterací bez ohledu na typ aplikace.
+      </div>
+      <div class="demo-controls">
+        <button class="btn" id="lcs-add">Přidej tok</button>
+        <button class="btn btn-secondary" id="lcs-reset">Reset</button>
+      </div>
+      <div id="lcs-flows" style="background:white;padding:10px;border-radius:4px;font-family:monospace;font-size:13px;min-height:60px"></div>
+      <div class="demo-output" id="lcs-candidate" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>SPID — byte frequency a KL divergence</h3>
+    <p>SPID porovnává distribuce přes <span class="key">Kullback-Leiblerovu divergenci</span>: <code>D<sub>KL</sub>(P||Q) = Σ P(x)·log<sub>2</sub>(P(x)/Q(x))</code>. Není symetrická!</p>
+    <div class="demo">
+      <div class="demo-title">SPID — byte frequency + KL divergence</div>
+      <div class="demo-controls">
+        <label>Vstupní text (paket): <input type="text" id="spid-input" value="GET / HTTP/1.1" style="width:260px"></label>
+        <button class="btn" id="spid-analyze">Analýza</button>
+      </div>
+      <svg id="spid-svg" viewBox="0 0 700 220" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="spid-result"></div>
+    </div>
+
+    <h4>KL divergence kalkulátor</h4>
+    <div class="demo">
+      <div class="demo-title">Spočítej D<sub>KL</sub>(P||Q) pro dvě distribuce</div>
+      <div class="demo-controls">
+        <label>P: <input type="text" id="kl-p" value="0.5, 0.3, 0.2"></label>
+        <label>Q: <input type="text" id="kl-q" value="0.4, 0.4, 0.2"></label>
+        <button class="btn" id="kl-calc">Spočítat</button>
+      </div>
+      <div class="demo-output" id="kl-result"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>TLS otisky — JA3, JA4</h3>
+    <p>JA3 = MD5 hash z 5 polí Client Hello: TLS Version, Cipher Suites, Extensions, Supported Groups, EC Format. <strong>GREASE</strong> hodnoty se eliminují.</p>
+    <div class="demo">
+      <div class="demo-title">JA3 builder</div>
+      <div class="demo-controls">
+        <label>TLS Ver: <input type="text" id="ja3-ver" value="771"></label>
+        <label>Cipher Suites: <input type="text" id="ja3-cs" value="49195-49196-52393" style="width:200px"></label>
+        <label>Extensions: <input type="text" id="ja3-ext" value="0-11-10-35-16" style="width:200px"></label>
+        <label>Groups: <input type="text" id="ja3-g" value="29-23-24" style="width:140px"></label>
+        <label>EC Format: <input type="text" id="ja3-ec" value="0" style="width:80px"></label>
+        <button class="btn" id="ja3-build">Vypočítej JA3</button>
+      </div>
+      <div class="demo-output large" id="ja3-result"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Identifikace podle portu — limity</h3>
+    <p>Klasická port-based identifikace předpokládá, že aplikace dodržují standardy. To dnes neplatí — port 443 obsahuje desítky různých služeb.</p>
+    <div class="demo">
+      <div class="demo-title">Co všechno běží na portu 443?</div>
+      <div class="demo-controls">
+        <label>Port: <input type="number" id="port-input" value="443"></label>
+        <button class="btn" id="port-go">Zobraz</button>
+      </div>
+      <div class="demo-output large" id="port-out"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>JA4 — moderní TLS otisk</h3>
+    <p>JA4 (a JA4S, JA4H, JA4X) je modernější varianta s strukturovanějším formátem. Tři části spojené podtržítky: <code>a_b_c</code>. JA4_a obsahuje metadata, JA4_b je truncated SHA-256 cipher suites, JA4_c je truncated SHA-256 extensions.</p>
+    <div class="demo">
+      <div class="demo-title">JA4 builder</div>
+      <div class="demo-controls">
+        <label>Transport: <select id="ja4-tx"><option value="t">TCP</option><option value="q">QUIC</option></select></label>
+        <label>TLS verze: <select id="ja4-ver"><option value="13">1.3</option><option value="12">1.2</option></select></label>
+        <label>SNI: <select id="ja4-sni"><option value="d">doména</option><option value="i">IP</option><option value="n">žádná</option></select></label>
+        <label>Cipher count: <input type="number" id="ja4-cn" value="15" min="0" max="99"></label>
+        <label>Extensions count: <input type="number" id="ja4-en" value="18" min="0" max="99"></label>
+        <label>ALPN: <input type="text" id="ja4-alpn" value="h2" style="width:60px"></label>
+        <button class="btn" id="ja4-build">Sestav JA4</button>
+      </div>
+      <div class="demo-output large" id="ja4-out"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Anomaly detection — práh a FP/FN</h3>
+    <p>Příliš nízký práh = false positives (operátor systém ignoruje). Příliš vysoký = false negatives (útok unikne). Pravidlo „alarm fatigue": víc než 1 z 10 alarmů falešných = systém je k ničemu.</p>
+    <div class="demo">
+      <div class="demo-title">Threshold tuner — najdi sweet spot</div>
+      <div class="demo-controls">
+        <label>Práh anomálie: <input type="range" id="ads-thresh" min="0" max="100" value="50"><span id="ads-thresh-val">50</span></label>
+      </div>
+      <svg id="ads-svg" viewBox="0 0 700 280" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="ads-info"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Detekce anomálií — DPA</h3>
+    <p>Pro průmyslové protokoly (IEC 104): konečný počet sekvencí příkazů. <em>Prefix Tree</em> obsahuje všechny prefixy, <em>DPA</em> je vytvořený slučováním přes Alergia algoritmus.</p>
+    <div class="demo">
+      <div class="demo-title">DPA — pravděpodobnostní automat</div>
+      <div class="demo-howto">
+        <strong>Jak to funguje</strong>
+        Postupně přidávejte trénovací sekvence příkazů (např. <code>A,B,C,D</code>). Z prefix-stromu
+        se postupně sloučí stejné stavy do <em>Deterministic Probabilistic Automaton</em> (DPA).
+        Šipky mají pravděpodobnost přechodu. Pro test zadejte sekvenci a klikněte „Anomálie?" —
+        pokud automat sekvenci nedokáže přijmout (P=0), je to anomálie; jinak vrátí součin pravděpodobností.
+      </div>
+      <div class="demo-controls">
+        <button class="btn" id="dpa-add">Přidej trénovací sekvenci</button>
+        <button class="btn btn-secondary" id="dpa-reset">Reset</button>
+      </div>
+      <svg id="dpa-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-controls">
+        <label>Test sekvence: <input type="text" id="dpa-test" value="A,B,C" style="width:200px"></label>
+        <button class="btn" id="dpa-check">Anomálie?</button>
+      </div>
+      <div class="demo-output" id="dpa-result"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== TOPIC 8: OS PACKET PROCESSING ============== -->
+<section id="tab-t8" class="topic">
+  <h2>8. Zpracování paketu v operačním systému</h2>
+  <p class="topic-intro">Rychlostní krize: Ethernet zrychlil 100 000×, CPU jen 3000×. Pro 100 GE máte na paket <span class="warn">6,7 ns</span> = 20 cyklů. <em>Nestihnete jediný DRAM access.</em> Proto akcelerace.</p>
+
+  <div class="subtopic">
+    <h3>Teoretický úvod</h3>
+    <p><strong>Centrální motivace: rychlostní krize.</strong> Ethernet má stejný formát rámce od roku 1976 a zrychlil z 10 Mb/s na 1 Tb/s — <span class="key">100 000×</span>. CPU se ale takhle vyvíjet nemohlo — clock CPU dosáhl plata kolem roku 2005 (~3 GHz), od té doby roste výkon jen přes víc jader. Rozdíl: CPU zrychlilo jen ~3000×.</p>
+    <p><strong>Co to znamená.</strong> Pro 100 GE máte na paket 6,7 ns = 20 cyklů při 3 GHz CPU. Za 20 cyklů musíte rozparsovat hlavičku, najít flow, aplikovat ACL, najít routing entry a vyplnit nový paket. K tomu commodity DRAM má přístup ~50 ns — <em>nestihnete ani jeden DRAM access na paket</em>. Proto se používá batching, akcelerace na NIC, hierarchie cache, zero-copy.</p>
+    <p><strong>Linux síťový stack</strong> kopíruje OSI model: hardware (NIC) na L1, kernel na L2-L4, aplikace v userspace na vyšších vrstvách. Centrální datovou strukturou je <span class="key">sk_buff</span> (Socket Buffer) — drží paket během celé cesty L2-L4 a opačně, s ukazateli na MAC/network/transport header. Tvoří obousměrně zřetězený seznam.</p>
+    <p><strong>Netfilter</strong> poskytuje 5 hooků pro packet-filter kód: PRE_ROUTING (před routingem — DNAT, conntrack), LOCAL_IN (pro tento host), FORWARD (přeposlané), POST_ROUTING (před odesláním — SNAT), LOCAL_OUT (lokálně vygenerované). 5 návratových kódů: ACCEPT, DROP, REPEAT, STOLEN, QUEUE. iptables je userspace frontend.</p>
+    <p><strong>Tři úrovně akcelerace.</strong> <em>V kernelu:</em> NAPI (kombinace interrupt + polling — bez NAPI by při 1 Mpps byl interrupt storm), RSS (multiqueue na víc CPU), GSO/GRO (kernel pracuje s 64 kB chunky místo MTU paketů), HW offloads (checksum, VLAN, crypto).</p>
+    <p><strong>Bypass techniky:</strong> <em>PF_RING ZC</em> (kernel bypass přes mmap), <em>DPDK</em> (plný kernel bypass, Poll Mode Driver, hugepages, dedicated CPU jádro), <em>XDP/eBPF</em> (programovatelný packet processor uvnitř kernelu, běží v driveru NIC — <strong>NENÍ</strong> kernel bypass!). Cloudflare používá XDP pro DDoS, Facebook Katran pro L4 load balancing.</p>
+  </div>
+
+  <div class="subtopic">
+    <h3>Rychlostní krize — paketový rozpočet</h3>
+    <div class="demo">
+      <div class="demo-title">Paketový rozpočet — kolik máte času na paket?</div>
+      <div class="demo-controls">
+        <label>Linka: <select id="rate-link">
+          <option value="10e6">10 Mb/s</option>
+          <option value="1e9">1 Gb/s</option>
+          <option value="10e9">10 Gb/s</option>
+          <option value="100e9" selected>100 Gb/s</option>
+          <option value="400e9">400 Gb/s</option>
+          <option value="1e12">1 Tb/s</option>
+        </select></label>
+        <label>Min. paket (B): <input type="number" id="rate-pkt" value="64" min="40" max="1500"></label>
+        <button class="btn" id="rate-calc">Spočítat</button>
+      </div>
+      <div class="demo-output large" id="rate-out"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>sk_buff — struktura paketu v Linuxu</h3>
+    <svg viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px;max-width:700px;display:block;margin:8px auto">
+      <!-- sk_buff structure visualization -->
+      <rect x="40" y="20" width="180" height="200" fill="#e8efff" stroke="var(--accent)" stroke-width="2"/>
+      <text x="130" y="40" text-anchor="middle" font-weight="600" font-size="14">struct sk_buff</text>
+      <text x="50" y="68" font-family="monospace" font-size="11">sk (socket)</text>
+      <text x="50" y="84" font-family="monospace" font-size="11">dev (net_device)</text>
+      <text x="50" y="100" font-family="monospace" font-size="11">protocol</text>
+      <text x="50" y="116" font-family="monospace" font-size="11">pkt_type</text>
+      <text x="50" y="132" font-family="monospace" font-size="11">head ───┐</text>
+      <text x="50" y="148" font-family="monospace" font-size="11">data ───┼┐</text>
+      <text x="50" y="164" font-family="monospace" font-size="11">tail ───┘│</text>
+      <text x="50" y="180" font-family="monospace" font-size="11">end ─────┘</text>
+      <text x="50" y="196" font-family="monospace" font-size="11">mac_header</text>
+      <text x="50" y="212" font-family="monospace" font-size="11">network_header</text>
+
+      <!-- Packet buffer -->
+      <rect x="300" y="40" width="360" height="160" fill="white" stroke="var(--border)" stroke-width="2"/>
+      <text x="480" y="30" text-anchor="middle" font-size="13" fill="var(--text-muted)">Packet data storage</text>
+
+      <rect x="300" y="40" width="40" height="160" fill="var(--bg-soft)" stroke="none"/>
+      <text x="320" y="120" text-anchor="middle" font-size="10" fill="var(--text-muted)" transform="rotate(-90 320 120)">head</text>
+
+      <rect x="340" y="40" width="60" height="160" fill="#fff4f0" stroke="var(--border)"/>
+      <text x="370" y="120" text-anchor="middle" font-size="11">MAC hdr</text>
+
+      <rect x="400" y="40" width="80" height="160" fill="#f0fff5" stroke="var(--border)"/>
+      <text x="440" y="120" text-anchor="middle" font-size="11">IP hdr</text>
+
+      <rect x="480" y="40" width="60" height="160" fill="#f0f6ff" stroke="var(--border)"/>
+      <text x="510" y="120" text-anchor="middle" font-size="11">TCP/UDP</text>
+
+      <rect x="540" y="40" width="100" height="160" fill="var(--bg-soft)" stroke="var(--border)"/>
+      <text x="590" y="120" text-anchor="middle" font-size="11">payload</text>
+
+      <rect x="640" y="40" width="20" height="160" fill="var(--bg-soft)" stroke="none"/>
+      <text x="650" y="120" text-anchor="middle" font-size="10" fill="var(--text-muted)" transform="rotate(-90 650 120)">end</text>
+
+      <!-- Pointers -->
+      <path d="M 220 132 L 295 120" stroke="var(--accent)" stroke-width="1.5" fill="none" marker-end="url(#arr8)"/>
+      <path d="M 220 148 L 295 140" stroke="var(--accent)" stroke-width="1.5" fill="none" marker-end="url(#arr8)"/>
+      <path d="M 220 164 L 295 160" stroke="var(--accent)" stroke-width="1.5" fill="none" marker-end="url(#arr8)"/>
+      <path d="M 220 180 L 635 195" stroke="var(--accent)" stroke-width="1.5" fill="none" marker-end="url(#arr8)"/>
+      <defs><marker id="arr8" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="var(--accent)"/></marker></defs>
+    </svg>
+  </div>
+
+  <div class="subtopic">
+    <h3>Netfilter — 5 hooků a iptables</h3>
+    <div class="demo">
+      <div class="demo-title">Trace paketu skrz netfilter hooks</div>
+      <div class="demo-howto">
+        <strong>Jak to funguje</strong>
+        Vyberte scénář — <em>forward</em> (pro někoho jiného), <em>local-in</em> (pro tento host),
+        nebo <em>local-out</em> (lokálně vygenerovaný). „Pošli paket" spustí 800 ms animaci postupně
+        zvýrazňující jednotlivé hooky v pipeline. Pod diagramem se zobrazuje, které
+        iptables tabulky se v aktuálním hooku vyhodnocují (raw → mangle → nat → filter → security).
+      </div>
+      <div class="demo-controls">
+        <label>Typ paketu:
+          <select id="nf-type">
+            <option value="forward">Forward (pro někoho jiného)</option>
+            <option value="local-in">Pro tento host</option>
+            <option value="local-out">Lokálně vygenerovaný</option>
+          </select>
+        </label>
+        <button class="btn" id="nf-play">Pošli paket</button>
+        <button class="btn btn-secondary" id="nf-reset">Reset</button>
+      </div>
+      <svg id="nf-svg" viewBox="0 0 700 280" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="nf-info" style="margin-top:8px;font-size:13px"></div>
+    </div>
+
+    <h4>5 návratových kódů hooku</h4>
+    <div class="grid-3">
+      <div class="card"><h5>NF_ACCEPT</h5>Pokračovat dál v stacku.</div>
+      <div class="card"><h5>NF_DROP</h5>Zahodit, bez ICMP.</div>
+      <div class="card"><h5>NF_QUEUE</h5>Do userspace (nfqueue).</div>
+      <div class="card"><h5>NF_STOLEN</h5>Hook si přivlastnil paket.</div>
+      <div class="card"><h5>NF_REPEAT</h5>Spustit hook znovu.</div>
+    </div>
+
+    <h4>5 iptables tabulek</h4>
+    <div class="grid-3">
+      <div class="card"><h5>filter</h5>Firewall (default).</div>
+      <div class="card"><h5>nat</h5>NAT (DNAT v PRE, SNAT v POST).</div>
+      <div class="card"><h5>mangle</h5>Mění pole hlavičky (TTL, DSCP, MARK).</div>
+      <div class="card"><h5>raw</h5>Paket neprochází conntrack.</div>
+      <div class="card"><h5>security</h5>SELinux context.</div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>sk_buff pointer manipulation — push/pull headers</h3>
+    <p>SKB má 4 ukazatele do data bufferu: <code>head</code> (začátek alokované paměti), <code>data</code> (začátek aktuálních dat), <code>tail</code> (konec dat), <code>end</code> (konec alokované paměti). Při sestupu stackem se přidávají hlavičky operací <code>skb_push</code> (data ← data−N), při výstupu se odebírají <code>skb_pull</code> (data → data+N).</p>
+    <div class="demo">
+      <div class="demo-title">sk_buff push/pull demo</div>
+      <div class="demo-controls">
+        <button class="btn" id="skb-push">skb_push (Tx, add header)</button>
+        <button class="btn" id="skb-pull">skb_pull (Rx, remove header)</button>
+        <button class="btn btn-secondary" id="skb-reset">Reset</button>
+      </div>
+      <svg id="skb-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="skb-info"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>RSS hash — 5-tuple → fronta</h3>
+    <p>Receive Side Scaling: hash z 5-tuple deterministicky vybere HW frontu (a tedy CPU jádro). Stejný flow vždy do stejné fronty. <em>Problém s tunelováním:</em> vnější hlavičky jsou stejné, takže všechen tunelovaný traffic skončí v jedné frontě.</p>
+    <div class="demo">
+      <div class="demo-title">RSS hash → queue</div>
+      <div class="demo-controls">
+        <label>Src IP: <input type="text" id="rss-src" value="10.5.1.42" style="width:120px"></label>
+        <label>Dst IP: <input type="text" id="rss-dst" value="203.0.113.99" style="width:120px"></label>
+        <label>Src port: <input type="number" id="rss-sport" value="54321"></label>
+        <label>Dst port: <input type="number" id="rss-dport" value="443"></label>
+        <label>Počet front: <input type="number" id="rss-queues" value="8" min="2" max="32"></label>
+        <button class="btn" id="rss-go">Spočítej</button>
+      </div>
+      <svg id="rss-svg" viewBox="0 0 700 220" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="rss-info"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>XDP akce — Drop / Pass / Redirect / Tx</h3>
+    <p>XDP program v driveru NIC může paket: <code>DROP</code> (zahodit hned), <code>PASS</code> (do stacku, normální cesta), <code>REDIRECT</code> (na jiný interface), <code>TX</code> (upravit a poslat zpět). Cloudflare používá pro DDoS, Facebook Katran pro L4 load balancing.</p>
+    <div class="demo">
+      <div class="demo-title">XDP rozhodovací strom</div>
+      <div class="demo-controls">
+        <label>Scénář:
+          <select id="xdp-scenario">
+            <option value="ddos">SYN flood DDoS</option>
+            <option value="lb">L4 load balancer</option>
+            <option value="monitor">Monitoring (pass-through)</option>
+            <option value="ping">ICMP echo reply (bounce)</option>
+            <option value="route">Bridge mezi interfaces</option>
+          </select>
+        </label>
+        <button class="btn" id="xdp-go">Spusti XDP</button>
+      </div>
+      <svg id="xdp-svg" viewBox="0 0 700 280" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="xdp-info"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>iptables rule tester</h3>
+    <p>iptables používá netfilter hooky. Pravidla mapují na tabulky (filter/nat/mangle/raw/security) a řetězce (PREROUTING/INPUT/FORWARD/OUTPUT/POSTROUTING).</p>
+    <div class="demo">
+      <div class="demo-title">iptables pravidlo → na který hook?</div>
+      <div class="demo-controls">
+        <input type="text" id="ipt-rule" value="iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE" style="width:80%;font-family:monospace;font-size:13px">
+        <button class="btn" id="ipt-go">Analyzuj</button>
+      </div>
+      <div class="demo-output large" id="ipt-out"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Akcelerace — PF_RING ZC, DPDK, XDP</h3>
+    <div class="demo">
+      <div class="demo-title">Porovnání architektur</div>
+      <div class="demo-controls">
+        <label>Technika: <select id="acc-tech">
+          <option>Standardní Linux</option>
+          <option>NAPI + offloady</option>
+          <option>PF_RING ZC</option>
+          <option>DPDK</option>
+          <option>XDP/eBPF</option>
+        </select></label>
+        <button class="btn" id="acc-show">Zobrazit</button>
+      </div>
+      <svg id="acc-svg" viewBox="0 0 700 260" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output large" id="acc-info"></div>
+    </div>
+
+    <div class="note">
+      <span class="label">Mýtus</span>
+      <strong>XDP NENÍ kernel bypass.</strong> XDP je integrovaná rychlá cesta <em>uvnitř</em> kernelu, běží v driveru NIC. Tím se zásadně liší od DPDK, který kernel obchází úplně.
+    </div>
+  </div>
+</section>
+
+<!-- ============== TOPIC 9: SDN/DC/P4 ============== -->
+<section id="tab-t9" class="topic">
+  <h2>9. Datová centra, SDN a programování sítí</h2>
+  <p class="topic-intro">Datová centra potřebují masivní propojení → leaf-spine s ECMP. Klasická CLI nestíhá → SDN s OpenFlow → P4 → NFV. Logická linka, kterou kapitola sleduje.</p>
+
+  <div class="subtopic">
+    <h3>Teoretický úvod</h3>
+    <p><strong>Tři klasické roviny zařízení.</strong> <em>Management plane</em> (CLI, SNMP, NETCONF — konfigurace), <em>Control plane</em> (BGP, OSPF, LLDP — vytváří forwarding tables), <em>Data plane</em> (vlastní forwarding, nezvládnuté pakety pošle do control plane). V klasické architektuře <em>všechny tři roviny běží na témž zařízení</em>; SDN je rozdělí — control plane se posune do externího kontroleru.</p>
+    <p><strong>Logická linka kapitoly.</strong> Hyperscaler datacentra (Google, Meta) potřebují propojení desetitisíců serverů → klasická tree topologie nestačí kvůli <em>oversubscription</em> u core (4:1 nebo 8:1) → leaf-spine s ECMP umožňuje full bisection bandwidth → ale leaf-spine vyžaduje hromadu identicky nakonfigurovaných switchů → klasická CLI nestíhá → SDN s OpenFlow → P4 → NFV. Pochopení této kauzální linie je klíčem k otázce „proč SDN existuje".</p>
+    <p><strong>Topologie datacenter</strong> v evoluci: <em>3-tier tree</em> (Core/Aggregation/Edge — oversubscription u core, drahé core routery jako SPOF) → <em>fat-tree</em> (Leiserson 1985 — paralelní linky blíže ke kořeni) → <em>leaf-spine</em> (každý leaf s každým spine, ECMP, zploštělý Clos) → <em>folded Clos / pod-based</em> (Facebook Fabric, Google Jupiter — uniformní levné prvky) → <em>rail design</em> (pro AI clustery, GPU max 1 hop).</p>
+    <p><strong>SDN (Software-Defined Networking)</strong> má tři pilíře: (1) odděluje forwarding plane od control plane, (2) umožňuje běh na whiteboxech / generickém HW, (3) poskytuje programovatelnost. SDN controller má globální view a programuje forwarding tables jednotlivých switchů. Dvě API: northbound (k aplikacím — REST), southbound (k zařízením — OpenFlow, NETCONF). Mýtus „SDN = vše centralizovat" je špatný — produkční SDN má cluster controllerů s konsensem (Raft).</p>
+    <p><strong>OpenFlow</strong> (McKeown 2008) je nejvýznamnější southbound protokol. Flow entry: <em>Rule (Match) + Action + Statistics</em>. Dva módy: <em>reactive</em> (první paket → controller — latence pro short-lived flows) a <em>proactive</em> (předinstalovaná pravidla).</p>
+    <p><strong>NFV</strong> virtualizuje síťové funkce (router, firewall, LB, DNS, VPN) na generic x86 — jako VM/container. Většina L4-L7 zařízení dnes už běží na x86 CPU. <em>SDN ≠ NFV:</em> SDN virtualizuje control, NFV virtualizuje funkce.</p>
+    <p><strong>P4 (Programming Protocol-independent Packet Processors)</strong> programuje <em>celou data plane pipeline</em>: vlastní hlavičky, parser, akce. OpenFlow má pevná match polia, P4 nechá programátora definovat všechno. Hlavním komerčním nositelem byl Tofino (Barefoot/Intel) — vývoj <span class="warn">zastaven v lednu 2023</span>. P4 ale žije dál na BMv2, FPGA, eBPF/XDP.</p>
+  </div>
+
+  <div class="subtopic">
+    <h3>Tři roviny zařízení</h3>
+    <div class="grid-3">
+      <div class="card"><h5>Management plane</h5>CLI, SNMP, NETCONF. Konfigurace.</div>
+      <div class="card"><h5>Control plane</h5>BGP, OSPF, LLDP. Vytváří forwarding tables.</div>
+      <div class="card"><h5>Data plane</h5>Vlastní forwarding. <span class="key">SDN posune control do externího kontroleru.</span></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Topologie datacenter</h3>
+    <div class="demo">
+      <div class="demo-title">Topologie builder + ECMP path tracer</div>
+      <div class="demo-controls">
+        <label>Topologie:
+          <select id="dc-topo">
+            <option value="tree">Klasická 3-tier tree</option>
+            <option value="leafspine" selected>Leaf-spine (ECMP)</option>
+            <option value="fattree">Fat-tree</option>
+            <option value="folded">Folded Clos (pod-based)</option>
+          </select>
+        </label>
+        <button class="btn" id="dc-trace">Trasuj flow</button>
+        <button class="btn btn-secondary" id="dc-redraw">Překresli</button>
+      </div>
+      <svg id="dc-svg" viewBox="0 0 700 360" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="dc-info" style="margin-top:8px"></div>
+    </div>
+
+    <h4>Oversubscription kalkulátor</h4>
+    <div class="demo">
+      <div class="demo-title">Spočítej oversubscription</div>
+      <div class="demo-controls">
+        <label>Severovýchodní BW (Gb/s): <input type="number" id="over-up" value="40"></label>
+        <label>Jižní BW (Gb/s): <input type="number" id="over-down" value="160"></label>
+        <button class="btn" id="over-calc">Spočítej</button>
+      </div>
+      <div class="demo-output" id="over-out"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>SDN a OpenFlow</h3>
+    <div class="demo">
+      <div class="demo-title">OpenFlow flow entry tester</div>
+      <p style="font-size:13px;margin-bottom:8px">Flow tabulka: <em>Rule (Match) + Action + Statistics</em>.</p>
+      <table style="background:white" id="of-table">
+        <thead><tr><th>Pri</th><th>Match (Src MAC, Dst IP, dport, …)</th><th>Action</th><th>Counter</th></tr></thead>
+        <tbody id="of-rows"></tbody>
+      </table>
+      <div class="demo-controls" style="margin-top:10px">
+        <label>Příchozí paket — Src MAC: <input type="text" id="of-srcmac" value="AA:BB:CC" style="width:100px"></label>
+        <label>Dst IP: <input type="text" id="of-dstip" value="10.0.0.5" style="width:100px"></label>
+        <label>Dst Port: <input type="number" id="of-dport" value="80"></label>
+        <button class="btn" id="of-send">Pošli paket</button>
+        <button class="btn btn-secondary" id="of-reset">Reset</button>
+      </div>
+      <div class="demo-output" id="of-result"></div>
+    </div>
+
+    <h4>Reactive vs Proactive</h4>
+    <div class="grid-2">
+      <div class="card">
+        <h5>Reactive</h5>
+        První paket flow → controller → instaluje pravidlo. <span class="warn">RTT 1-10 ms latence</span> pro short-lived flows.
+      </div>
+      <div class="card">
+        <h5>Proactive</h5>
+        Pravidla předinstalovaná. Aggregate switching. Controller musí znát flows předem.
+      </div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>ECMP hash — výběr cesty v leaf-spine</h3>
+    <p>V leaf-spine s ECMP hashujeme 5-tuple a vybereme jednu z paralelních cest. Stejný flow vždy jde po stejné cestě (no reorder). <strong>Problém:</strong> jeden velký flow obsadí jeden link — ostatní paralelní linky stojí (elephant flow).</p>
+    <div class="demo">
+      <div class="demo-title">ECMP path selector</div>
+      <div class="demo-controls">
+        <label>Src IP: <input type="text" id="ecmp-src" value="10.5.1.42" style="width:120px"></label>
+        <label>Dst IP: <input type="text" id="ecmp-dst" value="10.5.2.99" style="width:120px"></label>
+        <label>Src port: <input type="number" id="ecmp-sport" value="54321"></label>
+        <label>Dst port: <input type="number" id="ecmp-dport" value="443"></label>
+        <button class="btn" id="ecmp-go">Trasuj</button>
+        <button class="btn btn-secondary" id="ecmp-random">100 random flow</button>
+      </div>
+      <svg id="ecmp-svg" viewBox="0 0 700 320" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="ecmp-info"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>Reactive vs Proactive — RTT cena</h3>
+    <p>Reactive: první paket flow projde controllerem (1-10 ms RTT). Pro short-lived flow (DNS dotaz, 1 paket sem-tam) to dramaticky zničí latenci. Proactive: pravidla předinstalovaná, žádný RTT overhead.</p>
+    <div class="demo">
+      <div class="demo-title">Latence porovnání</div>
+      <div class="demo-controls">
+        <label>Controller RTT (ms): <input type="number" id="of-rtt" value="5" min="1" max="50"></label>
+        <label>Délka flow (paketů): <input type="number" id="of-len" value="3" min="1" max="1000"></label>
+        <button class="btn" id="of-compare">Porovnej</button>
+      </div>
+      <svg id="of-compare-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="of-compare-info"></div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>NFV — Network Function Virtualization</h3>
+    <p>L4-L7 funkce (router, firewall, LB, DNS) jako VM/container na generic x86. <em>SDN virtualizuje control, NFV virtualizuje funkce.</em></p>
+    <div class="grid-2">
+      <div class="card">
+        <h5>Tradiční</h5>
+        Dedikovaný HW per funkci: router, switch, firewall, LB, DNS, VPN.
+      </div>
+      <div class="card">
+        <h5>NFV</h5>
+        vRouter, vSwitch, vFirewall, vDNS jako VM nad commodity HW. Příklady: pfSense, Cisco CSR, F5 BIG-IP VTM.
+      </div>
+    </div>
+  </div>
+
+  <div class="subtopic">
+    <h3>P4 — programovatelný data plane</h3>
+    <p>OpenFlow má pevná match polia. P4 nechá programátora definovat <em>všechno</em>: hlavičky, parser, akce.</p>
+    <pre style="background:#1e1e1e;color:#d4d4d4;padding:14px;border-radius:4px;font-size:12px;overflow-x:auto">header_type ethernet_t {
+    fields {
+        dstAddr  : 48;
+        srcAddr  : 48;
+        etherType : 16;
+    }
+}
+
+parser ethernet {
+    extract(eth);
+    switch(eth.etherType) {
+        case 0x0800: ipv4;
+        case 0x86dd: ipv6;
+    }
+}</pre>
+    <div class="warn-box">
+      <span class="label">Tofino end of life</span>
+      Intel oznámil ukončení vývoje Tofino v lednu 2023. P4 ale žije dál na BMv2, FPGA (NetFPGA), eBPF/XDP a vznikajících ASIC od jiných vendorů.
+    </div>
+
+    <h4>P4 pipeline — parser → match-action → deparser</h4>
+    <div class="demo">
+      <div class="demo-title">P4 pipeline visualizér</div>
+      <div class="demo-controls">
+        <button class="btn" id="p4-go">Spusti paket pipeline</button>
+      </div>
+      <svg id="p4-svg" viewBox="0 0 700 280" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <div class="demo-output" id="p4-info"></div>
+    </div>
+
+    <h4>VxLAN encapsulation — overlay nad L3</h4>
+    <p>VxLAN obaluje L2 rámec do UDP/IP. VNI (24-bit Virtual Network ID) umožňuje 16M tenant sítí na sdílené fyzické infrastruktuře. Klíč pro multi-tenant DC.</p>
+    <div class="demo">
+      <div class="demo-title">VxLAN paket struktura</div>
+      <svg id="vxlan-svg" viewBox="0 0 700 200" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+    </div>
+  </div>
+</section>
+
+</main>
+</body>
+</html>
