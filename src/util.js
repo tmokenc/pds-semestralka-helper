@@ -2,11 +2,27 @@
 
 export const SVG_NS = 'http://www.w3.org/2000/svg';
 
+// SVG presentation attributes don't reliably resolve CSS var() in every browser
+// (Safari especially), but inline `style` does. Route paint props through style
+// when they reference a CSS variable.
+const STYLE_PROPS = new Set(['fill', 'stroke', 'opacity', 'fill-opacity', 'stroke-opacity', 'stroke-width', 'stroke-dasharray']);
+
 export function svgEl(tag, attrs = {}, parent = null) {
   const el = document.createElementNS(SVG_NS, tag);
+  const styleParts = [];
   for (const k in attrs) {
-    if (k === 'text') el.textContent = attrs[k];
-    else el.setAttribute(k, attrs[k]);
+    const v = attrs[k];
+    if (k === 'text') {
+      el.textContent = v;
+    } else if (STYLE_PROPS.has(k) && typeof v === 'string' && v.includes('var(')) {
+      styleParts.push(`${k}:${v}`);
+    } else {
+      el.setAttribute(k, v);
+    }
+  }
+  if (styleParts.length) {
+    const existing = el.getAttribute('style');
+    el.setAttribute('style', (existing ? existing + ';' : '') + styleParts.join(';'));
   }
   if (parent) parent.appendChild(el);
   return el;
