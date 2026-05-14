@@ -30,9 +30,10 @@ function initPER() {
     document.getElementById('ber-output').innerHTML =
       `<strong>p<sub>ok</sub> = (1 − ${be})^${bits} ≈ ${(pOk * 100).toFixed(3)} %</strong><br>` +
       `<strong>p<sub>err</sub> ≈ ${(pErr * 100).toFixed(3)} %</strong> chyba na paket o velikosti ${sz} B.<br>` +
-      `<span style="color:var(--text-muted);font-size:12px">Pravděpodobnost ztráty roste s délkou paketu exponenciálně.</span>`;
+      `<span style="color:var(--text-3);font-size:12px">Pravděpodobnost ztráty roste s délkou paketu exponenciálně.</span>`;
   };
-  document.getElementById('ber-calc').addEventListener('click', calc);
+  ['ber-input', 'ber-pktsize'].forEach(id =>
+    document.getElementById(id).addEventListener('input', calc));
   calc();
 }
 
@@ -51,9 +52,10 @@ function initSeqSpace() {
       `Rychlost <strong>R = ${R.toFixed(0)} paketů/s</strong><br>` +
       `Prostor sek. čísel ≥ <strong>${need.toFixed(0)}</strong> = (2·${mpl} + ${t} + ${a}) × ${R.toFixed(0)}<br>` +
       `Potřebných bitů: <strong>n ≥ log₂(${need.toFixed(0)}) ≈ ${n} bitů</strong><br>` +
-      `<span style="color:var(--text-muted);font-size:12px">TCP má 32 bitů, aby zvládl gigabitové linky.</span>`;
+      `<span style="color:var(--text-3);font-size:12px">TCP má 32 bitů, aby zvládl gigabitové linky.</span>`;
   };
-  document.getElementById('seq-calc').addEventListener('click', calc);
+  ['seq-mpl', 'seq-t', 'seq-a', 'seq-bw', 'seq-pkt'].forEach(id =>
+    document.getElementById(id).addEventListener('input', calc));
   calc();
 }
 
@@ -100,7 +102,7 @@ function drawEWMA() {
   if (!svg) return;
   clearSvg(svg);
   if (!ewmaState || ewmaState.samples.length === 0) {
-    svgEl('text', { x: 350, y: 120, 'text-anchor': 'middle', fill: '#888', text: 'Klikněte „Další paket"' }, svg);
+    svgEl('text', { x: 350, y: 120, 'text-anchor': 'middle', fill: 'var(--text-3)', text: 'Klikněte „Další paket"' }, svg);
     return;
   }
   const W = 700, H = 240, pad = 30;
@@ -109,27 +111,27 @@ function drawEWMA() {
   const yScale = v => H - pad - (H - 2 * pad) * (v / maxY);
 
   // axes
-  svgEl('line', { x1: pad, y1: H - pad, x2: W - pad, y2: H - pad, stroke: '#888' }, svg);
-  svgEl('line', { x1: pad, y1: pad, x2: pad, y2: H - pad, stroke: '#888' }, svg);
-  svgEl('text', { x: 10, y: pad, fill: '#666', 'font-size': 10, text: maxY.toFixed(0) + ' ms' }, svg);
-  svgEl('text', { x: 10, y: H - pad + 4, fill: '#666', 'font-size': 10, text: '0' }, svg);
+  svgEl('line', { x1: pad, y1: H - pad, x2: W - pad, y2: H - pad, stroke: 'var(--text-3)' }, svg);
+  svgEl('line', { x1: pad, y1: pad, x2: pad, y2: H - pad, stroke: 'var(--text-3)' }, svg);
+  svgEl('text', { x: 10, y: pad, fill: 'var(--text-3)', 'font-size': 10, text: maxY.toFixed(0) + ' ms' }, svg);
+  svgEl('text', { x: 10, y: H - pad + 4, fill: 'var(--text-3)', 'font-size': 10, text: '0' }, svg);
 
   // dotted lines + points
   const polyRtts = ewmaState.rtts.map((v, i) => `${xScale(i)},${yScale(v)}`).join(' ');
   const polyTo = ewmaState.timeouts.map((v, i) => `${xScale(i)},${yScale(v)}`).join(' ');
-  svgEl('polyline', { points: polyTo, fill: 'none', stroke: '#c73a1f', 'stroke-width': 2, 'stroke-dasharray': '4 2' }, svg);
-  svgEl('polyline', { points: polyRtts, fill: 'none', stroke: '#0066cc', 'stroke-width': 2 }, svg);
+  svgEl('polyline', { points: polyTo, fill: 'none', stroke: 'var(--danger)', 'stroke-width': 2, 'stroke-dasharray': '4 2' }, svg);
+  svgEl('polyline', { points: polyRtts, fill: 'none', stroke: 'var(--info)', 'stroke-width': 2 }, svg);
   ewmaState.samples.forEach((v, i) => {
-    svgEl('circle', { cx: xScale(i), cy: yScale(v), r: 3, fill: '#7a3ea1' }, svg);
+    svgEl('circle', { cx: xScale(i), cy: yScale(v), r: 3, fill: 'var(--secondary)' }, svg);
   });
 
   // legend
-  svgEl('rect', { x: W - 200, y: 10, width: 180, height: 60, fill: 'white', stroke: '#ddd' }, svg);
-  svgEl('line', { x1: W - 190, y1: 25, x2: W - 165, y2: 25, stroke: '#0066cc', 'stroke-width': 2 }, svg);
+  svgEl('rect', { x: W - 200, y: 10, width: 180, height: 60, fill: 'var(--surface)', stroke: 'var(--border)' }, svg);
+  svgEl('line', { x1: W - 190, y1: 25, x2: W - 165, y2: 25, stroke: 'var(--info)', 'stroke-width': 2 }, svg);
   svgEl('text', { x: W - 160, y: 28, 'font-size': 11, text: 'srtt (EWMA)' }, svg);
-  svgEl('line', { x1: W - 190, y1: 42, x2: W - 165, y2: 42, stroke: '#c73a1f', 'stroke-width': 2, 'stroke-dasharray': '4 2' }, svg);
+  svgEl('line', { x1: W - 190, y1: 42, x2: W - 165, y2: 42, stroke: 'var(--danger)', 'stroke-width': 2, 'stroke-dasharray': '4 2' }, svg);
   svgEl('text', { x: W - 160, y: 45, 'font-size': 11, text: 'timeout = srtt + 4·var' }, svg);
-  svgEl('circle', { cx: W - 178, cy: 59, r: 3, fill: '#7a3ea1' }, svg);
+  svgEl('circle', { cx: W - 178, cy: 59, r: 3, fill: 'var(--secondary)' }, svg);
   svgEl('text', { x: W - 160, y: 62, 'font-size': 11, text: 'naměřené RTT' }, svg);
 }
 function initEWMA() {
@@ -277,41 +279,41 @@ function initFlowControl() {
   function draw() {
     const svg = document.getElementById('flow-svg');
     clearSvg(svg);
-    arrowDef(svg, 'flow-arr-data', '#1F4B8A');
-    arrowDef(svg, 'flow-arr-ack', '#1F7A4E');
-    arrowDef(svg, 'flow-arr-dup', '#7a3ea1');
-    arrowDef(svg, 'flow-arr-lost', '#D6553D');
-    arrowDef(svg, 'flow-arr-parity', '#B86F00');
+    arrowDef(svg, 'flow-arr-data', 'var(--info-strong)');
+    arrowDef(svg, 'flow-arr-ack', 'var(--success)');
+    arrowDef(svg, 'flow-arr-dup', 'var(--secondary)');
+    arrowDef(svg, 'flow-arr-lost', 'var(--accent)');
+    arrowDef(svg, 'flow-arr-parity', 'var(--warning)');
 
     const total = state.events.length;
     const methodLabels = { saw: 'Stop-and-Wait', gbn: 'Go-Back-N (w=4)', sr: 'Selective Repeat (w=4)', fec: 'FEC (k=3 + 1 parity)' };
     const cur = state.idx > 0 && state.idx <= total ? state.events[state.idx - 1] : null;
-    const curColor = cur ? colorForKind(cur.kind) : '#525969';
+    const curColor = cur ? colorForKind(cur.kind) : 'var(--text-2)';
 
     // Phase banner
-    svgEl('rect', { x: 0, y: 0, width: W, height: 56, fill: '#F4F4F0' }, svg);
-    svgEl('text', { x: 18, y: 22, 'font-size': 14, 'font-weight': 700, fill: '#0F1419', text: methodLabels[state.method] || state.method }, svg);
+    svgEl('rect', { x: 0, y: 0, width: W, height: 56, fill: 'var(--bg-2)' }, svg);
+    svgEl('text', { x: 18, y: 22, 'font-size': 14, 'font-weight': 700, fill: 'var(--node-stroke)', text: methodLabels[state.method] || state.method }, svg);
     svgEl('text', {
       x: 18, y: 42, 'font-size': 12, fill: curColor, 'font-weight': 600,
       text: cur ? `◉ ${cur.state}` : '⏸ Připraveno — klikni „Další krok"',
     }, svg);
     svgEl('text', {
-      x: W - 18, y: 22, 'text-anchor': 'end', 'font-size': 12, fill: '#525969',
+      x: W - 18, y: 22, 'text-anchor': 'end', 'font-size': 12, fill: 'var(--text-2)',
       text: `událost ${state.idx} / ${total}`,
     }, svg);
     svgEl('text', {
-      x: W - 18, y: 42, 'text-anchor': 'end', 'font-size': 11, fill: '#525969',
+      x: W - 18, y: 42, 'text-anchor': 'end', 'font-size': 11, fill: 'var(--text-2)',
       'font-style': 'italic',
       text: cur && cur.comment ? cur.comment : '',
     }, svg);
 
     // Lifelines
-    svgEl('line', { x1: 130, y1: 64, x2: 130, y2: 488, stroke: '#0F1419', 'stroke-width': 1.5 }, svg);
-    svgEl('line', { x1: W - 130, y1: 64, x2: W - 130, y2: 488, stroke: '#0F1419', 'stroke-width': 1.5 }, svg);
-    svgEl('rect', { x: 75, y: 60, width: 110, height: 22, fill: '#E8EFFF', stroke: '#1F4B8A', rx: 3 }, svg);
-    svgEl('text', { x: 130, y: 76, 'text-anchor': 'middle', 'font-weight': 700, 'font-size': 11, fill: '#1F4B8A', text: 'Odesílatel' }, svg);
-    svgEl('rect', { x: W - 185, y: 60, width: 110, height: 22, fill: '#F0FFF5', stroke: '#1F7A4E', rx: 3 }, svg);
-    svgEl('text', { x: W - 130, y: 76, 'text-anchor': 'middle', 'font-weight': 700, 'font-size': 11, fill: '#1F7A4E', text: 'Příjemce' }, svg);
+    svgEl('line', { x1: 130, y1: 64, x2: 130, y2: 488, stroke: 'var(--node-stroke)', 'stroke-width': 1.5 }, svg);
+    svgEl('line', { x1: W - 130, y1: 64, x2: W - 130, y2: 488, stroke: 'var(--node-stroke)', 'stroke-width': 1.5 }, svg);
+    svgEl('rect', { x: 75, y: 60, width: 110, height: 22, fill: 'var(--info-bg)', stroke: 'var(--info-strong)', rx: 3 }, svg);
+    svgEl('text', { x: 130, y: 76, 'text-anchor': 'middle', 'font-weight': 700, 'font-size': 11, fill: 'var(--info-strong)', text: 'Odesílatel' }, svg);
+    svgEl('rect', { x: W - 185, y: 60, width: 110, height: 22, fill: 'var(--success-bg)', stroke: 'var(--success)', rx: 3 }, svg);
+    svgEl('text', { x: W - 130, y: 76, 'text-anchor': 'middle', 'font-weight': 700, 'font-size': 11, fill: 'var(--success)', text: 'Příjemce' }, svg);
 
     // Events up to idx
     for (let i = 0; i < state.idx && i < total; i++) {
@@ -346,7 +348,7 @@ function initFlowControl() {
           'stroke-dasharray': dasharray, opacity: op,
         }, svg);
         if (e.kind === 'lost') {
-          svgEl('text', { x: 420, y: e.y + 18, 'font-size': 12, fill: '#D6553D', 'font-weight': 700, opacity: op, text: '✗' }, svg);
+          svgEl('text', { x: 420, y: e.y + 18, 'font-size': 12, fill: 'var(--accent)', 'font-weight': 700, opacity: op, text: '✗' }, svg);
         }
         // Label
         const midX = e.kind === 'lost' ? 250 : (x1 + x2) / 2;
@@ -363,14 +365,14 @@ function initFlowControl() {
     let lx = 18;
     function leg(name, color, dash, marker) {
       svgEl('line', { x1: lx, y1: legY - 4, x2: lx + 22, y2: legY - 4, stroke: color, 'stroke-width': 2, 'stroke-dasharray': dash || '' }, svg);
-      svgEl('text', { x: lx + 28, y: legY, 'font-size': 10, fill: '#0F1419', text: name }, svg);
+      svgEl('text', { x: lx + 28, y: legY, 'font-size': 10, fill: 'var(--node-stroke)', text: name }, svg);
       lx += 90 + name.length * 2;
     }
-    leg('data',     '#1F4B8A', '');
-    leg('ACK',      '#1F7A4E', '4 3');
-    leg('dup-ACK',  '#7a3ea1', '4 3');
-    leg('LOST',     '#D6553D', '5 3');
-    leg('parita',   '#B86F00', '');
+    leg('data',     'var(--info-strong)', '');
+    leg('ACK',      'var(--success)', '4 3');
+    leg('dup-ACK',  'var(--secondary)', '4 3');
+    leg('LOST',     'var(--accent)', '5 3');
+    leg('parita',   'var(--warning)', '');
 
     // Step button label
     const btn = document.getElementById('flow-step');
@@ -383,9 +385,9 @@ function initFlowControl() {
 
   function colorForKind(k) {
     return ({
-      data: '#1F4B8A', ack: '#1F7A4E', dupack: '#7a3ea1',
-      lost: '#D6553D', parity: '#B86F00', note: '#525969',
-    })[k] || '#0F1419';
+      data: 'var(--info-strong)', ack: 'var(--success)', dupack: 'var(--secondary)',
+      lost: 'var(--accent)', parity: 'var(--warning)', note: 'var(--text-2)',
+    })[k] || 'var(--node-stroke)';
   }
   function arrowIdForKind(k) {
     return ({ data: 'flow-arr-data', ack: 'flow-arr-ack', dupack: 'flow-arr-dup', lost: 'flow-arr-lost', parity: 'flow-arr-parity' })[k] || 'flow-arr-data';
@@ -412,12 +414,12 @@ function initGBN() {
 
     // Plot efficiency vs p for current w
     const W = 700, H = 220, pad = 40;
-    svgEl('line', { x1: pad, y1: H - pad, x2: W - pad, y2: H - pad, stroke: '#888' }, svg);
-    svgEl('line', { x1: pad, y1: pad, x2: pad, y2: H - pad, stroke: '#888' }, svg);
-    svgEl('text', { x: 10, y: pad + 4, fill: '#666', 'font-size': 11, text: '100%' }, svg);
-    svgEl('text', { x: 10, y: H - pad + 4, fill: '#666', 'font-size': 11, text: '0%' }, svg);
-    svgEl('text', { x: W / 2, y: H - 10, 'text-anchor': 'middle', fill: '#666', 'font-size': 11, text: 'chybovost p (0 → 5%)' }, svg);
-    svgEl('text', { x: 15, y: H / 2, fill: '#666', 'font-size': 11, transform: `rotate(-90 15 ${H / 2})`, text: 'eff' }, svg);
+    svgEl('line', { x1: pad, y1: H - pad, x2: W - pad, y2: H - pad, stroke: 'var(--text-3)' }, svg);
+    svgEl('line', { x1: pad, y1: pad, x2: pad, y2: H - pad, stroke: 'var(--text-3)' }, svg);
+    svgEl('text', { x: 10, y: pad + 4, fill: 'var(--text-3)', 'font-size': 11, text: '100%' }, svg);
+    svgEl('text', { x: 10, y: H - pad + 4, fill: 'var(--text-3)', 'font-size': 11, text: '0%' }, svg);
+    svgEl('text', { x: W / 2, y: H - 10, 'text-anchor': 'middle', fill: 'var(--text-3)', 'font-size': 11, text: 'chybovost p (0 → 5%)' }, svg);
+    svgEl('text', { x: 15, y: H / 2, fill: 'var(--text-3)', 'font-size': 11, transform: `rotate(-90 15 ${H / 2})`, text: 'eff' }, svg);
 
     // Plot curve
     const pts = [];
@@ -428,14 +430,14 @@ function initGBN() {
       const y = H - pad - (H - 2 * pad) * eff;
       pts.push(`${x},${y}`);
     }
-    svgEl('polyline', { points: pts.join(' '), fill: 'none', stroke: '#0066cc', 'stroke-width': 2 }, svg);
+    svgEl('polyline', { points: pts.join(' '), fill: 'none', stroke: 'var(--info)', 'stroke-width': 2 }, svg);
 
     // Current point
     const eff = (1 - p) / (1 - p + p * w);
     const x = pad + (W - 2 * pad) * (p / 0.05);
     const y = H - pad - (H - 2 * pad) * eff;
-    svgEl('circle', { cx: x, cy: y, r: 6, fill: '#c73a1f' }, svg);
-    svgEl('text', { x: x + 10, y: y - 8, 'font-size': 12, fill: '#c73a1f', 'font-weight': 600, text: `${(eff * 100).toFixed(1)} %` }, svg);
+    svgEl('circle', { cx: x, cy: y, r: 6, fill: 'var(--danger)' }, svg);
+    svgEl('text', { x: x + 10, y: y - 8, 'font-size': 12, fill: 'var(--danger)', 'font-weight': 600, text: `${(eff * 100).toFixed(1)} %` }, svg);
   };
   ['gbn-w', 'gbn-p'].forEach(id => document.getElementById(id).addEventListener('input', draw));
   draw();
@@ -448,31 +450,31 @@ function initTCPHandshake() {
     open: {
       title: 'Navázání spojení — 3-way handshake',
       msgs: [
-        { from: 'c', y: 100, label: 'SYN, seq=x',                       color: '#1F4B8A', state: 'klient: SYN_SENT',     comment: 'Klient navrhuje vlastní seq=x' },
-        { from: 's', y: 160, label: 'SYN+ACK, seq=y, ack=x+1',          color: '#D6553D', state: 'server: SYN_RCVD',     comment: 'Server akceptuje x, navrhuje y' },
-        { from: 'c', y: 220, label: 'ACK, ack=y+1',                     color: '#1F7A4E', state: 'oba: ESTABLISHED',     comment: 'Spojení vytvořeno, lze posílat data' },
-        { from: 'c', y: 290, label: 'DATA →',                           color: '#7a3ea1', state: 'data flow',            comment: 'Sequence number = OFFSET BAJTU, ne pořadí paketu', kind: 'data' },
+        { from: 'c', y: 100, label: 'SYN, seq=x',                       color: 'var(--info-strong)', state: 'klient: SYN_SENT',     comment: 'Klient navrhuje vlastní seq=x' },
+        { from: 's', y: 160, label: 'SYN+ACK, seq=y, ack=x+1',          color: 'var(--accent)', state: 'server: SYN_RCVD',     comment: 'Server akceptuje x, navrhuje y' },
+        { from: 'c', y: 220, label: 'ACK, ack=y+1',                     color: 'var(--success)', state: 'oba: ESTABLISHED',     comment: 'Spojení vytvořeno, lze posílat data' },
+        { from: 'c', y: 290, label: 'DATA →',                           color: 'var(--secondary)', state: 'data flow',            comment: 'Sequence number = OFFSET BAJTU, ne pořadí paketu', kind: 'data' },
       ],
     },
     close: {
       title: 'Ukončení — 4-way close (full-duplex)',
       msgs: [
-        { from: 'c', y: 100, label: 'FIN',                              color: '#D6553D', state: 'klient: FIN_WAIT_1',   comment: 'Klient končí SVŮJ směr; druhý směr žije' },
-        { from: 's', y: 145, label: 'ACK (potvrzení FIN)',              color: '#1F7A4E', state: 'klient: FIN_WAIT_2 · server: CLOSE_WAIT', comment: 'Server stále může posílat data' },
-        { from: 's', y: 200, label: '(server může ještě posílat data)', color: '#7a3ea1', state: 'server: CLOSE_WAIT',   comment: 'Half-close: jen jeden směr uzavřen', kind: 'data' },
-        { from: 's', y: 260, label: 'FIN',                              color: '#D6553D', state: 'server: LAST_ACK',     comment: 'Server uzavírá svůj směr' },
-        { from: 'c', y: 320, label: 'ACK',                              color: '#1F7A4E', state: 'klient: TIME_WAIT (2·MSL)', comment: 'TIME_WAIT chrání před opožděnými duplikáty' },
+        { from: 'c', y: 100, label: 'FIN',                              color: 'var(--accent)', state: 'klient: FIN_WAIT_1',   comment: 'Klient končí SVŮJ směr; druhý směr žije' },
+        { from: 's', y: 145, label: 'ACK (potvrzení FIN)',              color: 'var(--success)', state: 'klient: FIN_WAIT_2 · server: CLOSE_WAIT', comment: 'Server stále může posílat data' },
+        { from: 's', y: 200, label: '(server může ještě posílat data)', color: 'var(--secondary)', state: 'server: CLOSE_WAIT',   comment: 'Half-close: jen jeden směr uzavřen', kind: 'data' },
+        { from: 's', y: 260, label: 'FIN',                              color: 'var(--accent)', state: 'server: LAST_ACK',     comment: 'Server uzavírá svůj směr' },
+        { from: 'c', y: 320, label: 'ACK',                              color: 'var(--success)', state: 'klient: TIME_WAIT (2·MSL)', comment: 'TIME_WAIT chrání před opožděnými duplikáty' },
       ],
     },
     halfclose: {
       title: 'Half-close — proč 4-way místo 3-way',
       msgs: [
-        { from: 'c', y: 100, label: 'FIN — uzavírám svůj směr',         color: '#D6553D', state: 'klient: FIN_WAIT_1',   comment: 'Klient končí; server zatím POKRAČUJE posílat' },
-        { from: 's', y: 145, label: 'ACK',                              color: '#1F7A4E', state: 'half-close',           comment: 'Půl spojení uzavřena, druhá běží' },
-        { from: 's', y: 195, label: 'pokračující data ↓',               color: '#7a3ea1', state: 'server stále posílá',  comment: 'Pointa: kdyby šlo o 3-way, server by tu možnost neměl', kind: 'data' },
-        { from: 's', y: 250, label: 'pokračující data ↓',               color: '#7a3ea1', state: 'server stále posílá',  kind: 'data' },
-        { from: 's', y: 305, label: 'FIN',                              color: '#D6553D', state: 'server: LAST_ACK',     comment: 'Konečně i server končí svůj směr' },
-        { from: 'c', y: 350, label: 'ACK',                              color: '#1F7A4E', state: 'CLOSED' },
+        { from: 'c', y: 100, label: 'FIN — uzavírám svůj směr',         color: 'var(--accent)', state: 'klient: FIN_WAIT_1',   comment: 'Klient končí; server zatím POKRAČUJE posílat' },
+        { from: 's', y: 145, label: 'ACK',                              color: 'var(--success)', state: 'half-close',           comment: 'Půl spojení uzavřena, druhá běží' },
+        { from: 's', y: 195, label: 'pokračující data ↓',               color: 'var(--secondary)', state: 'server stále posílá',  comment: 'Pointa: kdyby šlo o 3-way, server by tu možnost neměl', kind: 'data' },
+        { from: 's', y: 250, label: 'pokračující data ↓',               color: 'var(--secondary)', state: 'server stále posílá',  kind: 'data' },
+        { from: 's', y: 305, label: 'FIN',                              color: 'var(--accent)', state: 'server: LAST_ACK',     comment: 'Konečně i server končí svůj směr' },
+        { from: 'c', y: 350, label: 'ACK',                              color: 'var(--success)', state: 'CLOSED' },
       ],
     },
   };
@@ -511,37 +513,37 @@ function initTCPHandshake() {
   function draw() {
     const svg = document.getElementById('tcp-svg');
     clearSvg(svg);
-    arrowDef(svg, 'tcp-arr-blue',  '#1F4B8A');
-    arrowDef(svg, 'tcp-arr-red',   '#D6553D');
-    arrowDef(svg, 'tcp-arr-green', '#1F7A4E');
-    arrowDef(svg, 'tcp-arr-plum',  '#7a3ea1');
+    arrowDef(svg, 'tcp-arr-blue',  'var(--info-strong)');
+    arrowDef(svg, 'tcp-arr-red',   'var(--accent)');
+    arrowDef(svg, 'tcp-arr-green', 'var(--success)');
+    arrowDef(svg, 'tcp-arr-plum',  'var(--secondary)');
 
     const sc = SCENARIOS[state.scenario];
     const total = sc.msgs.length;
 
     // Phase banner
-    svgEl('rect', { x: 0, y: 0, width: W, height: 50, fill: '#F4F4F0' }, svg);
-    svgEl('text', { x: 18, y: 22, 'font-size': 14, 'font-weight': 700, fill: '#0F1419', text: sc.title }, svg);
+    svgEl('rect', { x: 0, y: 0, width: W, height: 50, fill: 'var(--bg-2)' }, svg);
+    svgEl('text', { x: 18, y: 22, 'font-size': 14, 'font-weight': 700, fill: 'var(--node-stroke)', text: sc.title }, svg);
     const curMsg = state.idx > 0 && state.idx <= total ? sc.msgs[state.idx - 1] : null;
     svgEl('text', {
       x: 18, y: 40, 'font-size': 12,
-      fill: curMsg ? curMsg.color : '#525969',
+      fill: curMsg ? curMsg.color : 'var(--text-2)',
       'font-weight': 600,
       text: curMsg ? `◉ ${curMsg.state}` : '⏸ Připraveno — klikni „Další krok"',
     }, svg);
     svgEl('text', {
       x: W - 18, y: 40, 'text-anchor': 'end',
-      'font-size': 12, fill: '#525969',
+      'font-size': 12, fill: 'var(--text-2)',
       text: `krok ${state.idx} / ${total}`,
     }, svg);
 
     // Lifelines
-    svgEl('line', { x1: 130, y1: 64, x2: 130, y2: 410, stroke: '#0F1419', 'stroke-width': 1.5 }, svg);
-    svgEl('line', { x1: W - 130, y1: 64, x2: W - 130, y2: 410, stroke: '#0F1419', 'stroke-width': 1.5 }, svg);
-    svgEl('rect', { x: 70, y: 60, width: 120, height: 22, fill: '#E8EFFF', stroke: '#1F4B8A', rx: 3 }, svg);
-    svgEl('text', { x: 130, y: 76, 'text-anchor': 'middle', 'font-weight': 700, 'font-size': 12, fill: '#1F4B8A', text: 'Klient' }, svg);
-    svgEl('rect', { x: W - 190, y: 60, width: 120, height: 22, fill: '#FFF0EC', stroke: '#D6553D', rx: 3 }, svg);
-    svgEl('text', { x: W - 130, y: 76, 'text-anchor': 'middle', 'font-weight': 700, 'font-size': 12, fill: '#D6553D', text: 'Server' }, svg);
+    svgEl('line', { x1: 130, y1: 64, x2: 130, y2: 410, stroke: 'var(--node-stroke)', 'stroke-width': 1.5 }, svg);
+    svgEl('line', { x1: W - 130, y1: 64, x2: W - 130, y2: 410, stroke: 'var(--node-stroke)', 'stroke-width': 1.5 }, svg);
+    svgEl('rect', { x: 70, y: 60, width: 120, height: 22, fill: 'var(--info-bg)', stroke: 'var(--info-strong)', rx: 3 }, svg);
+    svgEl('text', { x: 130, y: 76, 'text-anchor': 'middle', 'font-weight': 700, 'font-size': 12, fill: 'var(--info-strong)', text: 'Klient' }, svg);
+    svgEl('rect', { x: W - 190, y: 60, width: 120, height: 22, fill: 'var(--accent-bg)', stroke: 'var(--accent)', rx: 3 }, svg);
+    svgEl('text', { x: W - 130, y: 76, 'text-anchor': 'middle', 'font-weight': 700, 'font-size': 12, fill: 'var(--accent)', text: 'Server' }, svg);
 
     // Past messages (faded) + current message (highlighted)
     for (let i = 0; i < state.idx && i < total; i++) {
@@ -550,9 +552,9 @@ function initTCPHandshake() {
       const opacity = isCurrent ? 1.0 : 0.45;
       const x1 = m.from === 'c' ? 132 : W - 132;
       const x2 = m.from === 'c' ? W - 132 : 132;
-      const arrId = m.color === '#1F4B8A' ? 'tcp-arr-blue'
-                  : m.color === '#D6553D' ? 'tcp-arr-red'
-                  : m.color === '#1F7A4E' ? 'tcp-arr-green'
+      const arrId = m.color === 'var(--info-strong)' ? 'tcp-arr-blue'
+                  : m.color === 'var(--accent)' ? 'tcp-arr-red'
+                  : m.color === 'var(--success)' ? 'tcp-arr-green'
                   : 'tcp-arr-plum';
       svgEl('line', {
         x1, y1: m.y + 8, x2, y2: m.y + 22,
@@ -570,7 +572,7 @@ function initTCPHandshake() {
       if (isCurrent && m.comment) {
         svgEl('text', {
           x: (x1 + x2) / 2, y: m.y + 36, 'text-anchor': 'middle',
-          'font-size': 11, fill: '#525969',
+          'font-size': 11, fill: 'var(--text-2)',
           'font-style': 'italic',
           text: m.comment,
         }, svg);
@@ -678,10 +680,10 @@ function initAIMD() {
   }
 
   function modeColor(m) {
-    return m === 'ss'    ? '#B86F00'
-         : m === 'ca'    ? '#1F4B8A'
-         : m === 'cubic' ? '#1F7A4E'
-         :                 '#525969';
+    return m === 'ss'    ? 'var(--warning)'
+         : m === 'ca'    ? 'var(--info-strong)'
+         : m === 'cubic' ? 'var(--success)'
+         :                 'var(--text-2)';
   }
 
   function draw() {
@@ -697,9 +699,9 @@ function initAIMD() {
     // Phase banner
     const cur = state.shownTo > 0 ? state.data[Math.min(state.shownTo - 1, total - 1)] : null;
     const lastEvent = [...state.events].reverse().find(e => e.t < state.shownTo);
-    svgEl('rect', { x: 0, y: 0, width: W, height: 50, fill: '#F4F4F0' }, svg);
+    svgEl('rect', { x: 0, y: 0, width: W, height: 50, fill: 'var(--bg-2)' }, svg);
     const variantLabel = { tahoe: 'TCP Tahoe', reno: 'TCP Reno', cubic: 'CUBIC' }[state.variant];
-    svgEl('text', { x: 18, y: 22, 'font-size': 14, 'font-weight': 700, fill: '#0F1419', text: `AIMD — ${variantLabel}` }, svg);
+    svgEl('text', { x: 18, y: 22, 'font-size': 14, 'font-weight': 700, fill: 'var(--node-stroke)', text: `AIMD — ${variantLabel}` }, svg);
     if (cur) {
       const modeLabel = cur.mode === 'ss' ? 'Slow Start (exponenciální)'
                       : cur.mode === 'ca' ? 'Congestion Avoidance (lineární)'
@@ -707,30 +709,30 @@ function initAIMD() {
       svgEl('text', { x: 18, y: 40, 'font-size': 12, fill: modeColor(cur.mode), 'font-weight': 600,
         text: `◉ ${modeLabel}  ·  cwnd=${cur.cwnd.toFixed(1)}  ssthresh=${cur.ssthresh}` }, svg);
     } else {
-      svgEl('text', { x: 18, y: 40, 'font-size': 12, fill: '#525969', 'font-weight': 600, text: '⏸ Klikni „Další etapa" pro start' }, svg);
+      svgEl('text', { x: 18, y: 40, 'font-size': 12, fill: 'var(--text-2)', 'font-weight': 600, text: '⏸ Klikni „Další etapa" pro start' }, svg);
     }
-    svgEl('text', { x: W - 18, y: 22, 'text-anchor': 'end', 'font-size': 12, fill: '#525969',
+    svgEl('text', { x: W - 18, y: 22, 'text-anchor': 'end', 'font-size': 12, fill: 'var(--text-2)',
       text: `RTT ${state.shownTo} / ${RTTS}` }, svg);
     if (lastEvent) {
-      svgEl('text', { x: W - 18, y: 40, 'text-anchor': 'end', 'font-size': 11, fill: '#D6553D', 'font-style': 'italic',
+      svgEl('text', { x: W - 18, y: 40, 'text-anchor': 'end', 'font-size': 11, fill: 'var(--accent)', 'font-style': 'italic',
         text: `poslední: ${lastEvent.label} @ RTT ${lastEvent.t}` }, svg);
     }
 
     // Axes
-    svgEl('line', { x1: pad, y1: H - pad, x2: W - pad, y2: H - pad, stroke: '#0F1419', 'stroke-width': 1.2 }, svg);
-    svgEl('line', { x1: pad, y1: 60, x2: pad, y2: H - pad, stroke: '#0F1419', 'stroke-width': 1.2 }, svg);
-    svgEl('text', { x: pad - 12, y: 70, 'text-anchor': 'end', fill: '#525969', 'font-size': 11, text: 'cwnd' }, svg);
-    svgEl('text', { x: pad - 12, y: H - pad + 4, 'text-anchor': 'end', fill: '#525969', 'font-size': 10, text: '0' }, svg);
-    svgEl('text', { x: pad - 12, y: yS(maxC) + 4, 'text-anchor': 'end', fill: '#525969', 'font-size': 10, text: maxC.toFixed(0) }, svg);
-    svgEl('text', { x: W - pad + 4, y: H - pad + 4, fill: '#525969', 'font-size': 10, text: 'RTT' }, svg);
+    svgEl('line', { x1: pad, y1: H - pad, x2: W - pad, y2: H - pad, stroke: 'var(--node-stroke)', 'stroke-width': 1.2 }, svg);
+    svgEl('line', { x1: pad, y1: 60, x2: pad, y2: H - pad, stroke: 'var(--node-stroke)', 'stroke-width': 1.2 }, svg);
+    svgEl('text', { x: pad - 12, y: 70, 'text-anchor': 'end', fill: 'var(--text-2)', 'font-size': 11, text: 'cwnd' }, svg);
+    svgEl('text', { x: pad - 12, y: H - pad + 4, 'text-anchor': 'end', fill: 'var(--text-2)', 'font-size': 10, text: '0' }, svg);
+    svgEl('text', { x: pad - 12, y: yS(maxC) + 4, 'text-anchor': 'end', fill: 'var(--text-2)', 'font-size': 10, text: maxC.toFixed(0) }, svg);
+    svgEl('text', { x: W - pad + 4, y: H - pad + 4, fill: 'var(--text-2)', 'font-size': 10, text: 'RTT' }, svg);
 
     // Initial ssthresh line
     svgEl('line', {
       x1: pad, y1: yS(state.ssthreshStart),
       x2: W - pad, y2: yS(state.ssthreshStart),
-      stroke: '#D6553D', 'stroke-dasharray': '4 3', 'stroke-width': 1.2, opacity: 0.6,
+      stroke: 'var(--accent)', 'stroke-dasharray': '4 3', 'stroke-width': 1.2, opacity: 0.6,
     }, svg);
-    svgEl('text', { x: W - pad - 5, y: yS(state.ssthreshStart) - 4, 'text-anchor': 'end', fill: '#D6553D', 'font-size': 10, text: `ssthresh start = ${state.ssthreshStart}` }, svg);
+    svgEl('text', { x: W - pad - 5, y: yS(state.ssthreshStart) - 4, 'text-anchor': 'end', fill: 'var(--accent)', 'font-size': 10, text: `ssthresh start = ${state.ssthreshStart}` }, svg);
 
     // Mode-colored segments
     let segStart = 0;
@@ -759,16 +761,16 @@ function initAIMD() {
     state.events.filter(e => e.t < state.shownTo).forEach(e => {
       const isTimeout = e.type === 'timeout';
       const r = isTimeout ? 7 : 4;
-      svgEl('circle', { cx: xS(e.t), cy: yS(state.data[e.t].cwnd), r, fill: '#D6553D', stroke: '#8E1F1A', 'stroke-width': 1.5 }, svg);
-      svgEl('line', { x1: xS(e.t), y1: yS(state.data[e.t].cwnd), x2: xS(e.t), y2: H - pad, stroke: '#D6553D', 'stroke-width': 0.8, 'stroke-dasharray': '2 2', opacity: 0.5 }, svg);
-      svgEl('text', { x: xS(e.t), y: yS(state.data[e.t].cwnd) - 12, 'text-anchor': 'middle', 'font-size': 9, fill: '#D6553D', text: isTimeout ? 'T/O' : '3dup' }, svg);
+      svgEl('circle', { cx: xS(e.t), cy: yS(state.data[e.t].cwnd), r, fill: 'var(--accent)', stroke: 'var(--danger)', 'stroke-width': 1.5 }, svg);
+      svgEl('line', { x1: xS(e.t), y1: yS(state.data[e.t].cwnd), x2: xS(e.t), y2: H - pad, stroke: 'var(--accent)', 'stroke-width': 0.8, 'stroke-dasharray': '2 2', opacity: 0.5 }, svg);
+      svgEl('text', { x: xS(e.t), y: yS(state.data[e.t].cwnd) - 12, 'text-anchor': 'middle', 'font-size': 9, fill: 'var(--accent)', text: isTimeout ? 'T/O' : '3dup' }, svg);
     });
 
     // Current point indicator
     if (state.shownTo > 0 && state.shownTo <= total) {
       const idx = state.shownTo - 1;
       const d = state.data[idx];
-      svgEl('circle', { cx: xS(idx), cy: yS(d.cwnd), r: 5, fill: '#0F1419' }, svg);
+      svgEl('circle', { cx: xS(idx), cy: yS(d.cwnd), r: 5, fill: 'var(--node-stroke)' }, svg);
     }
 
     // Legend
@@ -776,17 +778,17 @@ function initAIMD() {
     let lx = pad;
     function leg(name, color) {
       svgEl('line', { x1: lx, y1: legY - 4, x2: lx + 22, y2: legY - 4, stroke: color, 'stroke-width': 2.5 }, svg);
-      svgEl('text', { x: lx + 28, y: legY, 'font-size': 10, fill: '#0F1419', text: name }, svg);
+      svgEl('text', { x: lx + 28, y: legY, 'font-size': 10, fill: 'var(--node-stroke)', text: name }, svg);
       lx += 30 + name.length * 6.5;
     }
-    leg('Slow Start',           '#B86F00');
-    leg('Cong. Avoidance',      '#1F4B8A');
-    if (state.variant === 'cubic') leg('CUBIC growth', '#1F7A4E');
-    svgEl('circle', { cx: lx + 6, cy: legY - 4, r: 4, fill: '#D6553D' }, svg);
-    svgEl('text', { x: lx + 16, y: legY, 'font-size': 10, fill: '#0F1419', text: '3 dup-ACK' }, svg);
+    leg('Slow Start',           'var(--warning)');
+    leg('Cong. Avoidance',      'var(--info-strong)');
+    if (state.variant === 'cubic') leg('CUBIC growth', 'var(--success)');
+    svgEl('circle', { cx: lx + 6, cy: legY - 4, r: 4, fill: 'var(--accent)' }, svg);
+    svgEl('text', { x: lx + 16, y: legY, 'font-size': 10, fill: 'var(--node-stroke)', text: '3 dup-ACK' }, svg);
     lx += 80;
-    svgEl('circle', { cx: lx + 6, cy: legY - 4, r: 7, fill: '#D6553D' }, svg);
-    svgEl('text', { x: lx + 18, y: legY, 'font-size': 10, fill: '#0F1419', text: 'timeout' }, svg);
+    svgEl('circle', { cx: lx + 6, cy: legY - 4, r: 7, fill: 'var(--accent)' }, svg);
+    svgEl('text', { x: lx + 18, y: legY, 'font-size': 10, fill: 'var(--node-stroke)', text: 'timeout' }, svg);
 
     // Step button label
     const btn = document.getElementById('aimd-step');
@@ -853,15 +855,15 @@ function initVariantsComparison() {
     const xS = i => pad + (W - 2 * pad) * (i / (RTTS - 1));
     const yS = c => H - pad - (H - 2 * pad) * (c / maxC);
 
-    svgEl('line', { x1: pad, y1: H - pad, x2: W - pad, y2: H - pad, stroke: '#888' }, svg);
-    svgEl('line', { x1: pad, y1: 20, x2: pad, y2: H - pad, stroke: '#888' }, svg);
-    svgEl('text', { x: W / 2, y: H - 8, 'text-anchor': 'middle', fill: '#666', 'font-size': 11, text: 'RTT' }, svg);
-    svgEl('text', { x: 15, y: 20, fill: '#666', 'font-size': 11, text: 'cwnd' }, svg);
+    svgEl('line', { x1: pad, y1: H - pad, x2: W - pad, y2: H - pad, stroke: 'var(--text-3)' }, svg);
+    svgEl('line', { x1: pad, y1: 20, x2: pad, y2: H - pad, stroke: 'var(--text-3)' }, svg);
+    svgEl('text', { x: W / 2, y: H - 8, 'text-anchor': 'middle', fill: 'var(--text-3)', 'font-size': 11, text: 'RTT' }, svg);
+    svgEl('text', { x: 15, y: 20, fill: 'var(--text-3)', 'font-size': 11, text: 'cwnd' }, svg);
 
     const variants = [
-      { data: tahoe, label: 'Tahoe', color: '#c73a1f' },
-      { data: reno, label: 'Reno', color: '#0066cc' },
-      { data: cubic, label: 'CUBIC', color: '#0a7a3d' },
+      { data: tahoe, label: 'Tahoe', color: 'var(--danger)' },
+      { data: reno, label: 'Reno', color: 'var(--info)' },
+      { data: cubic, label: 'CUBIC', color: 'var(--success)' },
     ];
     variants.forEach((v, vi) => {
       const pts = v.data.map((c, i) => `${xS(i)},${yS(c)}`).join(' ');
@@ -870,7 +872,6 @@ function initVariantsComparison() {
       svgEl('text', { x: W - 92, y: 26 + vi * 18, 'font-size': 11, text: v.label }, svg);
     });
   }
-  document.getElementById('variants-play').addEventListener('click', draw);
   document.getElementById('variants-loss').addEventListener('input', draw);
   draw();
 }
@@ -882,17 +883,17 @@ function initDupAck() {
   // (drawn above the arrow) and the slanted line below it without overlapping
   // the next event.
   const EVENTS = [
-    { y: 60,  from: 'c', label: 'seq=100 (data 100–199)',           color: '#0066cc' },
-    { y: 105, from: 'c', label: 'seq=200 (ZTRACENO v síti)',        color: '#c73a1f', lost: true },
-    { y: 150, from: 's', label: 'ACK=200 (potvrzeno seq=100)',      color: '#0a7a3d' },
-    { y: 195, from: 'c', label: 'seq=300',                           color: '#0066cc' },
-    { y: 240, from: 's', label: 'dup-ACK=200 (mám 300, chybí 200)', color: '#7a3ea1' },
-    { y: 285, from: 'c', label: 'seq=400',                           color: '#0066cc' },
-    { y: 330, from: 's', label: 'dup-ACK=200 (mám 400, stále chybí)', color: '#7a3ea1' },
-    { y: 375, from: 'c', label: 'seq=500',                           color: '#0066cc' },
-    { y: 415, from: 's', label: 'dup-ACK=200 (3. dup → trigger!)',  color: '#7a3ea1', bold: true },
-    { y: 455, from: 'c', label: '⚡ Fast Retransmit seq=200',        color: '#c73a1f', bold: true },
-    { y: 495, from: 's', label: 'ACK=600 (vše doručeno)',           color: '#0a7a3d', bold: true },
+    { y: 60,  from: 'c', label: 'seq=100 (data 100–199)',           color: 'var(--info)' },
+    { y: 105, from: 'c', label: 'seq=200 (ZTRACENO v síti)',        color: 'var(--danger)', lost: true },
+    { y: 150, from: 's', label: 'ACK=200 (potvrzeno seq=100)',      color: 'var(--success)' },
+    { y: 195, from: 'c', label: 'seq=300',                           color: 'var(--info)' },
+    { y: 240, from: 's', label: 'dup-ACK=200 (mám 300, chybí 200)', color: 'var(--secondary)' },
+    { y: 285, from: 'c', label: 'seq=400',                           color: 'var(--info)' },
+    { y: 330, from: 's', label: 'dup-ACK=200 (mám 400, stále chybí)', color: 'var(--secondary)' },
+    { y: 375, from: 'c', label: 'seq=500',                           color: 'var(--info)' },
+    { y: 415, from: 's', label: 'dup-ACK=200 (3. dup → trigger!)',  color: 'var(--secondary)', bold: true },
+    { y: 455, from: 'c', label: '⚡ Fast Retransmit seq=200',        color: 'var(--danger)', bold: true },
+    { y: 495, from: 's', label: 'ACK=600 (vše doručeno)',           color: 'var(--success)', bold: true },
   ];
 
   let animTimer = null;
@@ -900,17 +901,17 @@ function initDupAck() {
   function drawBase() {
     const svg = document.getElementById('dupack-svg');
     clearSvg(svg);
-    arrowDef(svg, 'dup-arr', '#0066cc');
-    arrowDef(svg, 'dup-arr-red', '#c73a1f');
-    arrowDef(svg, 'dup-arr-purple', '#7a3ea1');
-    arrowDef(svg, 'dup-arr-green', '#0a7a3d');
+    arrowDef(svg, 'dup-arr', 'var(--info)');
+    arrowDef(svg, 'dup-arr-red', 'var(--danger)');
+    arrowDef(svg, 'dup-arr-purple', 'var(--secondary)');
+    arrowDef(svg, 'dup-arr-green', 'var(--success)');
     // Lifelines
-    svgEl('line', { x1: 130, y1: 38, x2: 130, y2: 510, stroke: '#444', 'stroke-width': 1.5 }, svg);
-    svgEl('line', { x1: W - 130, y1: 38, x2: W - 130, y2: 510, stroke: '#444', 'stroke-width': 1.5 }, svg);
+    svgEl('line', { x1: 130, y1: 38, x2: 130, y2: 510, stroke: 'var(--text-2)', 'stroke-width': 1.5 }, svg);
+    svgEl('line', { x1: W - 130, y1: 38, x2: W - 130, y2: 510, stroke: 'var(--text-2)', 'stroke-width': 1.5 }, svg);
     // Header labels
-    svgEl('rect', { x: 80, y: 14, width: 100, height: 20, fill: '#e8efff', stroke: '#0066cc', rx: 3 }, svg);
+    svgEl('rect', { x: 80, y: 14, width: 100, height: 20, fill: 'var(--info-bg)', stroke: 'var(--info)', rx: 3 }, svg);
     svgEl('text', { x: 130, y: 29, 'text-anchor': 'middle', 'font-weight': 600, 'font-size': 12, text: 'Odesílatel' }, svg);
-    svgEl('rect', { x: W - 180, y: 14, width: 100, height: 20, fill: '#f0fff5', stroke: '#0a7a3d', rx: 3 }, svg);
+    svgEl('rect', { x: W - 180, y: 14, width: 100, height: 20, fill: 'var(--success-bg)', stroke: 'var(--success)', rx: 3 }, svg);
     svgEl('text', { x: W - 130, y: 29, 'text-anchor': 'middle', 'font-weight': 600, 'font-size': 12, text: 'Příjemce' }, svg);
   }
 
@@ -918,9 +919,9 @@ function initDupAck() {
     const svg = document.getElementById('dupack-svg');
     const x1 = e.from === 'c' ? 132 : W - 132;
     const x2 = e.from === 'c' ? (e.lost ? 380 : W - 132) : 132;
-    const arrId = e.color === '#c73a1f' ? 'dup-arr-red'
-                : e.color === '#7a3ea1' ? 'dup-arr-purple'
-                : e.color === '#0a7a3d' ? 'dup-arr-green'
+    const arrId = e.color === 'var(--danger)' ? 'dup-arr-red'
+                : e.color === 'var(--secondary)' ? 'dup-arr-purple'
+                : e.color === 'var(--success)' ? 'dup-arr-green'
                 : 'dup-arr';
     svgEl('line', {
       x1, y1: e.y + 8, x2, y2: e.y + 22,
@@ -936,7 +937,7 @@ function initDupAck() {
       'font-weight': e.bold ? 700 : 500, text: e.label,
     }, svg);
     if (e.lost) {
-      svgEl('text', { x: 400, y: e.y + 28, 'font-size': 12, fill: '#c73a1f', 'font-weight': 700, text: '✗' }, svg);
+      svgEl('text', { x: 400, y: e.y + 28, 'font-size': 12, fill: 'var(--danger)', 'font-weight': 700, text: '✗' }, svg);
     }
   }
 
@@ -944,7 +945,7 @@ function initDupAck() {
     if (animTimer) clearInterval(animTimer);
     drawBase();
     let idx = 0;
-    document.getElementById('dupack-info').innerHTML = '<span style="color:#7a3ea1">Animace běží…</span>';
+    document.getElementById('dupack-info').innerHTML = '<span style="color:var(--secondary)">Animace běží…</span>';
     animTimer = setInterval(() => {
       if (idx >= EVENTS.length) {
         clearInterval(animTimer);
@@ -979,11 +980,11 @@ function initRTT() {
     const rtt = parseFloat(document.getElementById('rtt-input').value);
     const W = 700, H = 320;
     const protocols = [
-      { name: 'TCP (cleartext)', rtts: 1, color: '#0066cc' },
-      { name: 'TCP + TLS 1.2', rtts: 3, color: '#7a3ea1' },
-      { name: 'TCP + TLS 1.3', rtts: 2, color: '#c73a1f' },
-      { name: 'QUIC 1-RTT (poprvé)', rtts: 1, color: '#cc8f00' },
-      { name: 'QUIC 0-RTT (opakovaně)', rtts: 0, color: '#0a7a3d' },
+      { name: 'TCP (cleartext)', rtts: 1, color: 'var(--info)' },
+      { name: 'TCP + TLS 1.2', rtts: 3, color: 'var(--secondary)' },
+      { name: 'TCP + TLS 1.3', rtts: 2, color: 'var(--danger)' },
+      { name: 'QUIC 1-RTT (poprvé)', rtts: 1, color: 'var(--warning)' },
+      { name: 'QUIC 0-RTT (opakovaně)', rtts: 0, color: 'var(--success)' },
     ];
     const maxRtts = 3;
     const barH = 36;
@@ -1000,23 +1001,22 @@ function initRTT() {
         svgEl('text', { x: xStart + r * W_PER_RTT + (W_PER_RTT - 6) / 2, y: y + barH / 2 + 4, 'text-anchor': 'middle', 'font-size': 11, fill: 'white', text: `RTT ${r + 1}` }, svg);
       }
       // Application data arrow
-      svgEl('rect', { x: xStart + p.rtts * W_PER_RTT, y, width: 60, height: barH, fill: '#1a1a1a' }, svg);
+      svgEl('rect', { x: xStart + p.rtts * W_PER_RTT, y, width: 60, height: barH, fill: 'var(--text)' }, svg);
       svgEl('text', { x: xStart + p.rtts * W_PER_RTT + 30, y: y + barH / 2 + 4, 'text-anchor': 'middle', 'font-size': 10, fill: 'white', text: '✉ data' }, svg);
       // Total time
       const total = p.rtts * rtt;
-      svgEl('text', { x: xStart + p.rtts * W_PER_RTT + 80, y: y + barH / 2 + 4, 'font-size': 11, fill: '#444', text: `${total.toFixed(0)} ms` }, svg);
+      svgEl('text', { x: xStart + p.rtts * W_PER_RTT + 80, y: y + barH / 2 + 4, 'font-size': 11, fill: 'var(--text-2)', text: `${total.toFixed(0)} ms` }, svg);
     });
 
     // Axis at top
     for (let r = 0; r <= maxRtts; r++) {
-      svgEl('line', { x1: xStart + r * W_PER_RTT, y1: 20, x2: xStart + r * W_PER_RTT, y2: H - 30, stroke: '#ddd', 'stroke-dasharray': '2 2' }, svg);
-      svgEl('text', { x: xStart + r * W_PER_RTT, y: 15, 'text-anchor': 'middle', 'font-size': 10, fill: '#888', text: `${r}× RTT` }, svg);
+      svgEl('line', { x1: xStart + r * W_PER_RTT, y1: 20, x2: xStart + r * W_PER_RTT, y2: H - 30, stroke: 'var(--border)', 'stroke-dasharray': '2 2' }, svg);
+      svgEl('text', { x: xStart + r * W_PER_RTT, y: 15, 'text-anchor': 'middle', 'font-size': 10, fill: 'var(--text-3)', text: `${r}× RTT` }, svg);
     }
 
     document.getElementById('rtt-info').innerHTML =
       `Pro RTT = ${rtt} ms: TCP+TLS 1.2 čeká <strong>${(3 * rtt).toFixed(0)} ms</strong> před prvním aplikačním bajtem. QUIC 0-RTT začne <strong>okamžitě</strong> (replay attack riziko — STK token má omezenou platnost).`;
   }
-  document.getElementById('rtt-show').addEventListener('click', draw);
   document.getElementById('rtt-input').addEventListener('input', draw);
   draw();
 }
@@ -1025,11 +1025,11 @@ function initRTT() {
 function initSCTP() {
   const W = 720;
   const MSGS = [
-    { y: 100, from: 'c', label: 'INIT (init tag, ASCONF)',                  color: '#1F4B8A', state: 'klient → server',          comment: 'Klient inicializuje. Server zatím NEVYTVÁŘÍ stav!' },
-    { y: 165, from: 's', label: 'INIT_ACK + State Cookie (HMAC podepsaný)', color: '#D6553D', state: 'server: žádný stav',       comment: 'Server vrací podepsaný „cookie" obsahující kontext. Stále žádná paměť!' },
-    { y: 235, from: 'c', label: 'COOKIE_ECHO (vrací cookie)',               color: '#1F7A4E', state: 'klient: posílá cookie zpět', comment: 'Klient prokazuje znalost cookie — proof-of-work pro server' },
-    { y: 305, from: 's', label: 'COOKIE_ACK → server alokuje stav',         color: '#7a3ea1', state: 'server: ESTABLISHED',      comment: 'Cookie ověřeno (HMAC) → teď server vytvoří asociaci' },
-    { y: 365, from: 'c', label: 'DATA →',                                   color: '#B86F00', state: 'data flow',                comment: 'Asociace připravena; multi-streaming, multi-homing' },
+    { y: 100, from: 'c', label: 'INIT (init tag, ASCONF)',                  color: 'var(--info-strong)', state: 'klient → server',          comment: 'Klient inicializuje. Server zatím NEVYTVÁŘÍ stav!' },
+    { y: 165, from: 's', label: 'INIT_ACK + State Cookie (HMAC podepsaný)', color: 'var(--accent)', state: 'server: žádný stav',       comment: 'Server vrací podepsaný „cookie" obsahující kontext. Stále žádná paměť!' },
+    { y: 235, from: 'c', label: 'COOKIE_ECHO (vrací cookie)',               color: 'var(--success)', state: 'klient: posílá cookie zpět', comment: 'Klient prokazuje znalost cookie — proof-of-work pro server' },
+    { y: 305, from: 's', label: 'COOKIE_ACK → server alokuje stav',         color: 'var(--secondary)', state: 'server: ESTABLISHED',      comment: 'Cookie ověřeno (HMAC) → teď server vytvoří asociaci' },
+    { y: 365, from: 'c', label: 'DATA →',                                   color: 'var(--warning)', state: 'data flow',                comment: 'Asociace připravena; multi-streaming, multi-homing' },
   ];
   let state = { idx: 0, auto: null };
 
@@ -1063,37 +1063,37 @@ function initSCTP() {
   function draw() {
     const svg = document.getElementById('sctp-svg');
     clearSvg(svg);
-    arrowDef(svg, 'sctp-arr-blue',  '#1F4B8A');
-    arrowDef(svg, 'sctp-arr-red',   '#D6553D');
-    arrowDef(svg, 'sctp-arr-green', '#1F7A4E');
-    arrowDef(svg, 'sctp-arr-plum',  '#7a3ea1');
-    arrowDef(svg, 'sctp-arr-ochre', '#B86F00');
+    arrowDef(svg, 'sctp-arr-blue',  'var(--info-strong)');
+    arrowDef(svg, 'sctp-arr-red',   'var(--accent)');
+    arrowDef(svg, 'sctp-arr-green', 'var(--success)');
+    arrowDef(svg, 'sctp-arr-plum',  'var(--secondary)');
+    arrowDef(svg, 'sctp-arr-ochre', 'var(--warning)');
 
     const total = MSGS.length;
     const cur = state.idx > 0 && state.idx <= total ? MSGS[state.idx - 1] : null;
 
     // Phase banner
-    svgEl('rect', { x: 0, y: 0, width: W, height: 56, fill: '#F4F4F0' }, svg);
-    svgEl('text', { x: 18, y: 22, 'font-size': 14, 'font-weight': 700, fill: '#0F1419', text: 'SCTP 4-way handshake (anti-SYN-flood)' }, svg);
+    svgEl('rect', { x: 0, y: 0, width: W, height: 56, fill: 'var(--bg-2)' }, svg);
+    svgEl('text', { x: 18, y: 22, 'font-size': 14, 'font-weight': 700, fill: 'var(--node-stroke)', text: 'SCTP 4-way handshake (anti-SYN-flood)' }, svg);
     svgEl('text', {
       x: 18, y: 42, 'font-size': 12,
-      fill: cur ? cur.color : '#525969', 'font-weight': 600,
+      fill: cur ? cur.color : 'var(--text-2)', 'font-weight': 600,
       text: cur ? `◉ ${cur.state}` : '⏸ Klikni „Další krok"',
     }, svg);
-    svgEl('text', { x: W - 18, y: 22, 'text-anchor': 'end', 'font-size': 12, fill: '#525969', text: `krok ${state.idx} / ${total}` }, svg);
+    svgEl('text', { x: W - 18, y: 22, 'text-anchor': 'end', 'font-size': 12, fill: 'var(--text-2)', text: `krok ${state.idx} / ${total}` }, svg);
     if (cur && cur.comment) {
-      svgEl('text', { x: W - 18, y: 42, 'text-anchor': 'end', 'font-size': 11, fill: '#525969', 'font-style': 'italic', text: cur.comment }, svg);
+      svgEl('text', { x: W - 18, y: 42, 'text-anchor': 'end', 'font-size': 11, fill: 'var(--text-2)', 'font-style': 'italic', text: cur.comment }, svg);
     }
 
     // Lifelines
-    svgEl('line', { x1: 130, y1: 64, x2: 130, y2: 405, stroke: '#0F1419', 'stroke-width': 1.5 }, svg);
-    svgEl('line', { x1: W - 130, y1: 64, x2: W - 130, y2: 405, stroke: '#0F1419', 'stroke-width': 1.5 }, svg);
-    svgEl('rect', { x: 75, y: 60, width: 110, height: 22, fill: '#E8EFFF', stroke: '#1F4B8A', rx: 3 }, svg);
-    svgEl('text', { x: 130, y: 76, 'text-anchor': 'middle', 'font-weight': 700, 'font-size': 11, fill: '#1F4B8A', text: 'Klient' }, svg);
-    svgEl('rect', { x: W - 185, y: 60, width: 110, height: 22, fill: '#FFF0EC', stroke: '#D6553D', rx: 3 }, svg);
+    svgEl('line', { x1: 130, y1: 64, x2: 130, y2: 405, stroke: 'var(--node-stroke)', 'stroke-width': 1.5 }, svg);
+    svgEl('line', { x1: W - 130, y1: 64, x2: W - 130, y2: 405, stroke: 'var(--node-stroke)', 'stroke-width': 1.5 }, svg);
+    svgEl('rect', { x: 75, y: 60, width: 110, height: 22, fill: 'var(--info-bg)', stroke: 'var(--info-strong)', rx: 3 }, svg);
+    svgEl('text', { x: 130, y: 76, 'text-anchor': 'middle', 'font-weight': 700, 'font-size': 11, fill: 'var(--info-strong)', text: 'Klient' }, svg);
+    svgEl('rect', { x: W - 185, y: 60, width: 110, height: 22, fill: 'var(--accent-bg)', stroke: 'var(--accent)', rx: 3 }, svg);
     // Server state label
     const serverEstablished = state.idx >= 4;
-    svgEl('text', { x: W - 130, y: 76, 'text-anchor': 'middle', 'font-weight': 700, 'font-size': 11, fill: serverEstablished ? '#1F7A4E' : '#D6553D', text: serverEstablished ? 'Server (ESTABLISHED)' : 'Server (no state!)' }, svg);
+    svgEl('text', { x: W - 130, y: 76, 'text-anchor': 'middle', 'font-weight': 700, 'font-size': 11, fill: serverEstablished ? 'var(--success)' : 'var(--accent)', text: serverEstablished ? 'Server (ESTABLISHED)' : 'Server (no state!)' }, svg);
 
     // Messages
     for (let i = 0; i < state.idx && i < total; i++) {
@@ -1102,10 +1102,10 @@ function initSCTP() {
       const op = isCurrent ? 1.0 : 0.45;
       const x1 = m.from === 'c' ? 132 : W - 132;
       const x2 = m.from === 'c' ? W - 132 : 132;
-      const arrId = m.color === '#1F4B8A' ? 'sctp-arr-blue'
-                  : m.color === '#D6553D' ? 'sctp-arr-red'
-                  : m.color === '#1F7A4E' ? 'sctp-arr-green'
-                  : m.color === '#7a3ea1' ? 'sctp-arr-plum'
+      const arrId = m.color === 'var(--info-strong)' ? 'sctp-arr-blue'
+                  : m.color === 'var(--accent)' ? 'sctp-arr-red'
+                  : m.color === 'var(--success)' ? 'sctp-arr-green'
+                  : m.color === 'var(--secondary)' ? 'sctp-arr-plum'
                   : 'sctp-arr-ochre';
       svgEl('line', {
         x1, y1: m.y + 8, x2, y2: m.y + 22,
@@ -1121,9 +1121,9 @@ function initSCTP() {
 
     // Highlight the "no state" zone after step 1 and 2
     if (state.idx >= 1 && state.idx < 4) {
-      svgEl('rect', { x: W - 195, y: 90, width: 130, height: 130, fill: '#FFF0EC', stroke: '#D6553D', 'stroke-dasharray': '4 3', opacity: 0.4 }, svg);
-      svgEl('text', { x: W - 130, y: 110, 'text-anchor': 'middle', 'font-size': 10, fill: '#D6553D', 'font-weight': 700, text: '⓪ Žádný stav' }, svg);
-      svgEl('text', { x: W - 130, y: 124, 'text-anchor': 'middle', 'font-size': 10, fill: '#D6553D', text: 'odolnost vs SYN-flood' }, svg);
+      svgEl('rect', { x: W - 195, y: 90, width: 130, height: 130, fill: 'var(--accent-bg)', stroke: 'var(--accent)', 'stroke-dasharray': '4 3', opacity: 0.4 }, svg);
+      svgEl('text', { x: W - 130, y: 110, 'text-anchor': 'middle', 'font-size': 10, fill: 'var(--accent)', 'font-weight': 700, text: '⓪ Žádný stav' }, svg);
+      svgEl('text', { x: W - 130, y: 124, 'text-anchor': 'middle', 'font-size': 10, fill: 'var(--accent)', text: 'odolnost vs SYN-flood' }, svg);
     }
 
     // Step button label
@@ -1146,22 +1146,22 @@ function initMPTCP() {
     const shared = document.getElementById('mptcp-shared').checked;
     const W = 700, H = 240;
     // Sender / receiver
-    svgEl('rect', { x: 30, y: H / 2 - 30, width: 110, height: 60, fill: '#b8d4ff', stroke: '#0066cc', 'stroke-width': 2, rx: 6 }, svg);
+    svgEl('rect', { x: 30, y: H / 2 - 30, width: 110, height: 60, fill: 'var(--info-bg)', stroke: 'var(--info)', 'stroke-width': 2, rx: 6 }, svg);
     svgEl('text', { x: 85, y: H / 2 + 4, 'text-anchor': 'middle', 'font-weight': 600, text: 'Klient' }, svg);
-    svgEl('rect', { x: W - 140, y: H / 2 - 30, width: 110, height: 60, fill: '#b8d4ff', stroke: '#0066cc', 'stroke-width': 2, rx: 6 }, svg);
+    svgEl('rect', { x: W - 140, y: H / 2 - 30, width: 110, height: 60, fill: 'var(--info-bg)', stroke: 'var(--info)', 'stroke-width': 2, rx: 6 }, svg);
     svgEl('text', { x: W - 85, y: H / 2 + 4, 'text-anchor': 'middle', 'font-weight': 600, text: 'Server' }, svg);
 
     // Bottleneck box if shared
     if (shared) {
-      svgEl('rect', { x: W / 2 - 60, y: H / 2 - 80, width: 120, height: 160, fill: '#ffe9a3', stroke: '#cc8f00', 'stroke-width': 2, 'stroke-dasharray': '4 3' }, svg);
-      svgEl('text', { x: W / 2, y: H / 2 - 60, 'text-anchor': 'middle', 'font-size': 11, fill: '#cc8f00', 'font-weight': 600, text: 'Shared bottleneck' }, svg);
+      svgEl('rect', { x: W / 2 - 60, y: H / 2 - 80, width: 120, height: 160, fill: 'var(--warning-bg)', stroke: 'var(--warning)', 'stroke-width': 2, 'stroke-dasharray': '4 3' }, svg);
+      svgEl('text', { x: W / 2, y: H / 2 - 60, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--warning)', 'font-weight': 600, text: 'Shared bottleneck' }, svg);
     }
 
     // Subflows
     for (let i = 0; i < paths; i++) {
       const offset = (i - (paths - 1) / 2) * 30;
       const y = H / 2 + offset;
-      const color = ['#0066cc', '#7a3ea1', '#cc8f00', '#0a7a3d'][i];
+      const color = ['var(--info)', 'var(--secondary)', 'var(--warning)', 'var(--success)'][i];
       svgEl('path', { d: `M 145 ${H / 2} Q ${W / 2} ${y - 10} ${W - 145} ${H / 2}`, fill: 'none', stroke: color, 'stroke-width': 2 }, svg);
       svgEl('text', { x: W / 2, y: y + 8, 'text-anchor': 'middle', 'font-size': 11, fill: color, 'font-weight': 600, text: `Subflow ${i + 1} (MP_${i === 0 ? 'CAPABLE' : 'JOIN'})` }, svg);
     }
@@ -1172,7 +1172,11 @@ function initMPTCP() {
       `Coupled AIMD: ${shared ? 'celkový throughput = 1× TCP (férové vůči TCP)' : `~${paths}× TCP throughput (pásmo se sčítá)`}. ` +
       `Dvě úrovně sekvenčních čísel: subflow seq (uvnitř každého) + Data Sequence Number (DSN) pro reordering napříč subflow.`;
   }
-  document.getElementById('mptcp-go').addEventListener('click', draw);
-  ['mptcp-paths', 'mptcp-shared'].forEach(id => document.getElementById(id).addEventListener('input', draw));
+  ['mptcp-paths', 'mptcp-shared'].forEach(id => {
+    const el = document.getElementById(id);
+    // checkbox doesn't fire 'input' reliably across browsers — listen to both
+    el.addEventListener('input', draw);
+    el.addEventListener('change', draw);
+  });
   draw();
 }

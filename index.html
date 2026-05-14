@@ -22,6 +22,19 @@
 </head>
 <body>
 
+<div class="floating-controls">
+  <a class="gh-link" href="https://github.com/tmokenc/pds-semestralka-helper" target="_blank" rel="noopener" aria-label="GitHub repository">
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+      <path fill="currentColor" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.27-.01-1-.02-1.96-3.2.69-3.87-1.54-3.87-1.54-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.68 1.25 3.34.95.1-.74.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.18 1.18a11.05 11.05 0 0 1 5.78 0c2.21-1.49 3.18-1.18 3.18-1.18.62 1.58.23 2.75.11 3.04.73.81 1.18 1.83 1.18 3.09 0 4.42-2.69 5.4-5.26 5.68.41.36.78 1.06.78 2.13 0 1.54-.01 2.78-.01 3.16 0 .31.21.68.8.56C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5Z"/>
+    </svg>
+    <span>GitHub</span>
+  </a>
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+    <span class="theme-sun">☼</span>
+    <span class="theme-moon">☾</span>
+  </button>
+</div>
+
 <header class="site-header">
   <div class="masthead-rule">
     <span class="rule-left">
@@ -29,10 +42,6 @@
       Akademický rok <strong>2025/2026</strong>
     </span>
     <span class="rule-mid">FIT VUT · Přenos dat, sítě &amp; protokoly</span>
-    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
-      <span class="theme-sun">☼</span>
-      <span class="theme-moon">☾</span>
-    </button>
   </div>
   <h1>
     <span class="brand">PDS</span><span class="brand-sep">/</span><span class="brand-soft">vizualizace</span>
@@ -106,7 +115,6 @@
       <div class="demo-controls">
         <label>BER (p<sub>e</sub>): <input type="number" id="ber-input" value="0.0001" step="0.00001" min="0" max="1"></label>
         <label>Velikost paketu (B): <input type="number" id="ber-pktsize" value="1400" min="40" max="9000"></label>
-        <button class="btn" id="ber-calc">Spočítat</button>
       </div>
       <div class="demo-output" id="ber-output">Pro BER 0,0001 a 1400 B: P<sub>err</sub> ≈ 67,4 % — i miniaturní BER zničí dlouhé pakety.</div>
     </div>
@@ -121,10 +129,9 @@
         <label>ACK delay A (s): <input type="number" id="seq-a" value="0.5" step="0.1"></label>
         <label>Linka (Mb/s): <input type="number" id="seq-bw" value="2"></label>
         <label>Paket (B): <input type="number" id="seq-pkt" value="40"></label>
-        <button class="btn" id="seq-calc">Spočítat</button>
       </div>
       <div class="demo-output large" id="seq-output">Klikněte „Spočítat"</div>
-      <p style="font-size:13px;color:var(--text-muted);margin-top:8px">TCP má 32 bitů — pokryje i gigabitové linky při MPL 2 min.</p>
+      <p style="font-size:13px;color:var(--text-3);margin-top:8px">TCP má 32 bitů — pokryje i gigabitové linky při MPL 2 min.</p>
     </div>
 
     <h4>Adaptivní timeout (EWMA)</h4>
@@ -136,7 +143,7 @@
         <button class="btn btn-secondary" id="ewma-reset">Reset</button>
         <label>α: <input type="range" id="ewma-alpha" min="0.05" max="0.5" step="0.025" value="0.125"><span id="ewma-alpha-val">0.125</span></label>
       </div>
-      <svg id="ewma-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="ewma-svg" viewBox="0 0 700 240" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
     </div>
 
     <h4>Negativní potvrzování (NACK)</h4>
@@ -150,9 +157,9 @@
       <div class="demo-howto">
         <strong>Jak to funguje</strong>
         Vyberte metodu (S&amp;W / GBN / SR / FEC) a index paketu, který se „ztratí". <em>Další krok</em>
-        ukazuje vždy jednu událost: <span style="color:#1F4B8A">modrá šipka</span> = data klient→server,
-        <span style="color:#1F7A4E">zelená přerušovaná</span> = ACK, <span style="color:#7a3ea1">fialová</span>
-        = dup-ACK, <span style="color:#D6553D">červená přerušovaná</span> = ztracený paket. Aktivní událost
+        ukazuje vždy jednu událost: <span style="color:var(--info-strong)">modrá šipka</span> = data klient→server,
+        <span style="color:var(--success)">zelená přerušovaná</span> = ACK, <span style="color:var(--secondary)">fialová</span>
+        = dup-ACK, <span style="color:var(--accent)">červená přerušovaná</span> = ztracený paket. Aktivní událost
         je vždy tučně doplněná o anotaci stavu odesílatele a příjemce.
       </div>
       <div class="demo-controls">
@@ -169,7 +176,7 @@
         <button class="btn btn-secondary" id="flow-play">Auto-přehrát</button>
         <button class="btn btn-secondary" id="flow-reset">Reset</button>
       </div>
-      <svg id="flow-svg" viewBox="0 0 720 500" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="flow-svg" viewBox="0 0 720 500" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="flow-info" style="margin-top:8px;font-size:13px"></div>
     </div>
 
@@ -181,7 +188,7 @@
         <label>Okno w: <input type="range" id="gbn-w" min="1" max="500" value="250"><span id="gbn-w-val">250</span></label>
         <label>Chybovost p: <input type="range" id="gbn-p" min="0" max="0.05" step="0.0001" value="0.01"><span id="gbn-p-val">0.01</span></label>
       </div>
-      <svg id="gbn-svg" viewBox="0 0 700 220" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="gbn-svg" viewBox="0 0 700 220" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
     </div>
   </div>
 
@@ -210,7 +217,7 @@
         <button class="btn btn-secondary" id="tcp-play">Auto-přehrát</button>
         <button class="btn btn-secondary" id="tcp-reset">Reset</button>
       </div>
-      <svg id="tcp-svg" viewBox="0 0 720 420" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="tcp-svg" viewBox="0 0 720 420" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
     </div>
 
     <h4>AIMD — graf zubů pily</h4>
@@ -219,10 +226,10 @@
       <div class="demo-title">AIMD — krokovaný simulátor cwnd</div>
       <div class="demo-howto">
         <strong>Jak to funguje</strong>
-        Křivka roste po každém RTT. <span style="color:#B86F00;font-weight:600">Oranžová</span> = Slow Start (exponenciální zdvojování),
-        <span style="color:#1F4B8A;font-weight:600">modrá</span> = Congestion Avoidance (+1 MSS/RTT),
-        <span style="color:#1F7A4E;font-weight:600">zelená</span> = CUBIC bikubický růst.
-        <span style="color:#D6553D;font-weight:600">Červené tečky</span> značí ztráty: malé = 3 dup-ACK (cwnd /2 nebo →1), velké = timeout (cwnd → 1).
+        Křivka roste po každém RTT. <span style="color:var(--warning);font-weight:600">Oranžová</span> = Slow Start (exponenciální zdvojování),
+        <span style="color:var(--info-strong);font-weight:600">modrá</span> = Congestion Avoidance (+1 MSS/RTT),
+        <span style="color:var(--success);font-weight:600">zelená</span> = CUBIC bikubický růst.
+        <span style="color:var(--accent);font-weight:600">Červené tečky</span> značí ztráty: malé = 3 dup-ACK (cwnd /2 nebo →1), velké = timeout (cwnd → 1).
         Klikejte „Další etapa" pro postupný růst, nebo „Auto-přehrát" pro plynulou animaci.
       </div>
       <div class="demo-controls">
@@ -239,7 +246,7 @@
         <button class="btn btn-secondary" id="aimd-play">Auto-přehrát</button>
         <button class="btn btn-secondary" id="aimd-reset">Reset</button>
       </div>
-      <svg id="aimd-svg" viewBox="0 0 720 360" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="aimd-svg" viewBox="0 0 720 360" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
     </div>
 
     <div class="note">
@@ -257,7 +264,7 @@
         <label>Ztrátovost (%): <input type="range" id="variants-loss" min="0" max="10" step="0.1" value="2"><span id="variants-loss-val">2.0</span></label>
         <button class="btn" id="variants-play">Spustit</button>
       </div>
-      <svg id="variants-svg" viewBox="0 0 700 280" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="variants-svg" viewBox="0 0 700 280" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
     </div>
   </div>
 
@@ -268,7 +275,7 @@
       <div class="demo-title">Animace 3 dup-ACK → Fast Retransmit</div>
       <button class="btn" id="dupack-play">Přehrát animaci</button>
       <button class="btn btn-secondary" id="dupack-reset">Reset</button>
-      <svg id="dupack-svg" viewBox="0 0 720 520" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="dupack-svg" viewBox="0 0 720 520" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="dupack-info" style="margin-top:8px;font-size:13px"></div>
     </div>
   </div>
@@ -282,7 +289,7 @@
         <label>RTT (ms): <input type="number" id="rtt-input" value="50" min="1" max="500"></label>
         <button class="btn" id="rtt-show">Zobrazit</button>
       </div>
-      <svg id="rtt-svg" viewBox="0 0 700 320" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="rtt-svg" viewBox="0 0 700 320" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="rtt-info"></div>
     </div>
   </div>
@@ -304,7 +311,7 @@
         <button class="btn btn-secondary" id="sctp-play">Auto-přehrát</button>
         <button class="btn btn-secondary" id="sctp-reset">Reset</button>
       </div>
-      <svg id="sctp-svg" viewBox="0 0 720 420" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="sctp-svg" viewBox="0 0 720 420" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
     </div>
   </div>
 
@@ -318,7 +325,7 @@
         <label>Cesta sdílí bottleneck? <input type="checkbox" id="mptcp-shared"></label>
         <button class="btn" id="mptcp-go">Spusti</button>
       </div>
-      <svg id="mptcp-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="mptcp-svg" viewBox="0 0 700 240" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="mptcp-info"></div>
     </div>
   </div>
@@ -368,7 +375,7 @@
       <div class="demo-title">Výběr cesty — interaktivní simulátor</div>
       <p style="font-size:13px;margin-bottom:8px">Pro paket cíl <code id="route-dst">10.5.1.100</code> má router 4 kandidátní cesty. Která vyhraje?</p>
       <button class="btn" id="route-randomize" style="margin-bottom:10px">Náhodný cíl</button>
-      <table id="route-table" style="background:white">
+      <table id="route-table" style="background:var(--surface)">
         <thead><tr><th>Prefix</th><th>Zdroj</th><th>AD</th><th>Metrika</th><th>Next-hop</th><th>Match?</th></tr></thead>
         <tbody id="route-rows"></tbody>
       </table>
@@ -416,7 +423,7 @@
         <button class="btn" id="sp-auto">Auto</button>
         <button class="btn btn-secondary" id="sp-reset">Reset</button>
       </div>
-      <svg id="sp-svg" viewBox="0 0 700 400" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="sp-svg" viewBox="0 0 700 400" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <ol class="step-list" id="sp-steps"></ol>
     </div>
   </div>
@@ -453,7 +460,7 @@
         <button class="btn" id="cti-break">Síť padla</button>
         <button class="btn btn-secondary" id="cti-reset">Reset</button>
       </div>
-      <svg id="cti-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="cti-svg" viewBox="0 0 700 240" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <ol class="step-list" id="cti-steps"></ol>
     </div>
   </div>
@@ -465,14 +472,13 @@
       <div class="demo-title">OSPF cost kalkulátor</div>
       <div class="demo-controls">
         <label>Bandwidth (Mbps): <input type="number" id="ospf-bw" value="100"></label>
-        <button class="btn" id="ospf-calc">Spočítat</button>
       </div>
       <div class="demo-output" id="ospf-out">Klikněte „Spočítat"</div>
     </div>
 
     <h4>EIGRP feasibility condition: RD<sub>v</sub> &lt; FD</h4>
     <p>Pokud má soused k cíli <em>striktně kratší</em> cestu než znáš ty, nevede přes tebe smyčka. Konzervativní, ale nikdy nepřijme loop.</p>
-    <svg viewBox="0 0 600 220" style="background:white;border:1px solid var(--border);border-radius:4px;max-width:600px;display:block;margin:8px auto">
+    <svg viewBox="0 0 600 220" style="background:var(--surface);border:1px solid var(--border);border-radius:4px;max-width:600px;display:block;margin:8px auto">
       <!-- EIGRP topology -->
       <circle cx="100" cy="80" r="22" fill="var(--bg-card)" stroke="var(--accent)" stroke-width="2"/>
       <text x="100" y="86" text-anchor="middle" font-family="monospace" font-size="14">A</text>
@@ -482,14 +488,14 @@
       <text x="500" y="86" text-anchor="middle" font-family="monospace" font-size="14">cíl</text>
       <circle cx="300" cy="180" r="22" fill="var(--bg-card)" stroke="var(--accent-2)" stroke-width="2"/>
       <text x="300" y="186" text-anchor="middle" font-family="monospace" font-size="14">C</text>
-      <line x1="120" y1="80" x2="280" y2="80" stroke="#888" stroke-width="2"/>
-      <line x1="320" y1="80" x2="480" y2="80" stroke="#888" stroke-width="2"/>
-      <line x1="115" y1="95" x2="285" y2="170" stroke="#888" stroke-width="2"/>
-      <line x1="315" y1="170" x2="485" y2="95" stroke="#888" stroke-width="2"/>
-      <text x="200" y="72" text-anchor="middle" font-size="11" fill="var(--text-muted)">cost 10</text>
-      <text x="400" y="72" text-anchor="middle" font-size="11" fill="var(--text-muted)">cost 5</text>
-      <text x="180" y="145" font-size="11" fill="var(--text-muted)">cost 3</text>
-      <text x="410" y="145" font-size="11" fill="var(--text-muted)">cost 8</text>
+      <line x1="120" y1="80" x2="280" y2="80" stroke="var(--text-3)" stroke-width="2"/>
+      <line x1="320" y1="80" x2="480" y2="80" stroke="var(--text-3)" stroke-width="2"/>
+      <line x1="115" y1="95" x2="285" y2="170" stroke="var(--text-3)" stroke-width="2"/>
+      <line x1="315" y1="170" x2="485" y2="95" stroke="var(--text-3)" stroke-width="2"/>
+      <text x="200" y="72" text-anchor="middle" font-size="11" fill="var(--text-3)">cost 10</text>
+      <text x="400" y="72" text-anchor="middle" font-size="11" fill="var(--text-3)">cost 5</text>
+      <text x="180" y="145" font-size="11" fill="var(--text-3)">cost 3</text>
+      <text x="410" y="145" font-size="11" fill="var(--text-3)">cost 8</text>
       <text x="100" y="135" text-anchor="middle" font-size="11">FD<sub>A</sub>=15 (přes B)</text>
       <text x="500" y="135" text-anchor="middle" font-size="11">B→cíl: 5</text>
       <text x="300" y="220" text-anchor="middle" font-size="11">C→cíl: 8, RD pro A: 8 &lt; FD=15 ✓ feasible</text>
@@ -502,7 +508,7 @@
     <div class="demo">
       <div class="demo-title">BGP route selection (11 stupňů)</div>
       <p style="font-size:13px;margin-bottom:8px">Pro prefix <code>10.0.0.0/16</code> máme 3 kandidátní cesty. Která vyhraje?</p>
-      <table id="bgp-table" style="background:white">
+      <table id="bgp-table" style="background:var(--surface)">
         <thead><tr>
           <th>Cesta</th><th>Weight</th><th>LOCAL_PREF</th><th>Locally gen.</th><th>AS-PATH</th><th>ORIGIN</th><th>MED</th><th>eBGP/iBGP</th>
         </tr></thead>
@@ -530,7 +536,7 @@
         <button class="btn" id="lsa-flood">Spustit flooding z R1</button>
         <button class="btn btn-secondary" id="lsa-reset">Reset</button>
       </div>
-      <svg id="lsa-svg" viewBox="0 0 700 360" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="lsa-svg" viewBox="0 0 700 360" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <ol class="step-list" id="lsa-steps"></ol>
     </div>
   </div>
@@ -546,7 +552,7 @@
         <label>Soused C inzeruje RD: <input type="number" id="eigrp-rdc" value="20"></label>
         <button class="btn" id="eigrp-check">Vyhodnoť feasibility</button>
       </div>
-      <svg id="eigrp-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="eigrp-svg" viewBox="0 0 700 240" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="eigrp-out"></div>
     </div>
   </div>
@@ -558,7 +564,6 @@
       <div class="demo-title">NSAP parser</div>
       <div class="demo-controls">
         <label>NSAP: <input type="text" id="nsap-input" value="49.0001.1234.5678.9012.00" style="width:280px"></label>
-        <button class="btn" id="nsap-parse">Parse</button>
       </div>
       <div class="demo-output large" id="nsap-out"></div>
     </div>
@@ -571,7 +576,7 @@
       <div class="demo-title">MPLS LSP simulátor (PUSH / SWAP / POP)</div>
       <button class="btn" id="mpls-play">Pošli paket</button>
       <button class="btn btn-secondary" id="mpls-reset">Reset</button>
-      <svg id="mpls-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px;margin-top:8px"></svg>
+      <svg id="mpls-svg" viewBox="0 0 700 240" style="background:var(--surface);border:1px solid var(--border);border-radius:4px;margin-top:8px"></svg>
       <div class="demo-output" id="mpls-info" style="margin-top:8px;font-size:13px"></div>
     </div>
 
@@ -583,7 +588,7 @@
         <label>Hloubka stacku: <input type="number" id="stack-depth" value="3" min="1" max="5"></label>
         <button class="btn" id="stack-show">Zobrazit</button>
       </div>
-      <svg id="stack-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="stack-svg" viewBox="0 0 700 240" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
     </div>
   </div>
 </section>
@@ -628,7 +633,6 @@
         <label>Rychlost R (Gb/s): <input type="number" id="sw-r" value="1" step="0.1"></label>
         <label>Hodiny r (MHz): <input type="number" id="sw-clk" value="40"></label>
         <label>Buňka C (B): <input type="number" id="sw-cell" value="40"></label>
-        <button class="btn" id="sw-calc">Spočítat</button>
       </div>
       <div class="demo-output large" id="sw-out">Klikněte „Spočítat"</div>
     </div>
@@ -644,7 +648,7 @@
         <button class="btn" id="hol-step">Krok</button>
         <button class="btn btn-secondary" id="hol-reset">Reset</button>
       </div>
-      <svg id="hol-svg" viewBox="0 0 700 280" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="hol-svg" viewBox="0 0 700 280" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="hol-info" style="margin-top:8px;font-size:13px"></div>
     </div>
   </div>
@@ -675,9 +679,9 @@
         <button class="btn btn-secondary" id="match-newreq">Nové žádosti</button>
         <button class="btn btn-secondary" id="match-reset">Reset</button>
       </div>
-      <svg id="match-svg" viewBox="0 0 720 420" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="match-svg" viewBox="0 0 720 420" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <ol class="step-list" id="match-steps"></ol>
-      <p style="font-size:12px;color:var(--text-muted);margin-top:6px">Klikněte na buňku v <strong>levé mřížce VOQ</strong> pro nastavení/odebrání paketu k výstupu. Pak „Další iterace".</p>
+      <p style="font-size:12px;color:var(--text-3);margin-top:6px">Klikněte na buňku v <strong>levé mřížce VOQ</strong> pro nastavení/odebrání paketu k výstupu. Pak „Další iterace".</p>
     </div>
   </div>
 
@@ -695,7 +699,7 @@
         <button class="btn" id="eslip-step">Krok</button>
         <button class="btn btn-secondary" id="eslip-reset">Reset</button>
       </div>
-      <svg id="eslip-svg" viewBox="0 0 700 320" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="eslip-svg" viewBox="0 0 700 320" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="eslip-info"></div>
     </div>
   </div>
@@ -711,7 +715,7 @@
         <button class="btn" id="pri-step">Krok scheduleru</button>
         <button class="btn btn-secondary" id="pri-reset">Reset</button>
       </div>
-      <svg id="pri-svg" viewBox="0 0 700 280" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="pri-svg" viewBox="0 0 700 280" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="pri-info"></div>
     </div>
   </div>
@@ -725,9 +729,8 @@
         <label>m (středních): <input type="number" id="clos-m" value="7" min="1" max="12"></label>
         <label>n (vstupů/blok): <input type="number" id="clos-n" value="4" min="2" max="8"></label>
         <label>r (vstupních bloků): <input type="number" id="clos-r" value="2" min="2" max="6"></label>
-        <button class="btn" id="clos-draw">Postav síť</button>
       </div>
-      <svg id="clos-svg" viewBox="0 0 700 360" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="clos-svg" viewBox="0 0 700 360" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output large" id="clos-info"></div>
     </div>
 
@@ -736,9 +739,8 @@
       <div class="demo-title">Beneš builder</div>
       <div class="demo-controls">
         <label>n (2<sup>n</sup> portů): <input type="number" id="benes-n" value="3" min="1" max="5"></label>
-        <button class="btn" id="benes-draw">Postav síť</button>
       </div>
-      <svg id="benes-svg" viewBox="0 0 800 360" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="benes-svg" viewBox="0 0 800 360" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output large" id="benes-info"></div>
     </div>
   </div>
@@ -768,11 +770,11 @@
       <div class="grid-2" style="margin-top:10px">
         <div>
           <h5 style="font-size:13px;margin-bottom:6px">RIB (všechny cesty)</h5>
-          <table style="background:white"><thead><tr><th>Prefix</th><th>Zdroj</th><th>AD</th><th>Metrika</th><th>Next-hop</th></tr></thead><tbody id="rib-rows"></tbody></table>
+          <table style="background:var(--surface)"><thead><tr><th>Prefix</th><th>Zdroj</th><th>AD</th><th>Metrika</th><th>Next-hop</th></tr></thead><tbody id="rib-rows"></tbody></table>
         </div>
         <div>
           <h5 style="font-size:13px;margin-bottom:6px">FIB (jen vítězové)</h5>
-          <table style="background:white"><thead><tr><th>Prefix</th><th>Out-IF</th><th>Dst MAC</th></tr></thead><tbody id="fib-rows"></tbody></table>
+          <table style="background:var(--surface)"><thead><tr><th>Prefix</th><th>Out-IF</th><th>Dst MAC</th></tr></thead><tbody id="fib-rows"></tbody></table>
         </div>
       </div>
     </div>
@@ -787,8 +789,8 @@
         <button class="btn btn-secondary" id="ctx-reset">Reset</button>
         <span id="ctx-phase-label" style="font-weight:600"></span>
       </div>
-      <svg id="ctx-svg" viewBox="0 0 700 280" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
-      <table style="background:white;margin-top:8px">
+      <svg id="ctx-svg" viewBox="0 0 700 280" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
+      <table style="background:var(--surface);margin-top:8px">
         <thead><tr><th>Položka kontextu</th><th>Hodnota</th></tr></thead>
         <tbody id="ctx-rows"></tbody>
       </table>
@@ -813,7 +815,6 @@
             <option>Multicast IGMP report</option>
           </select>
         </label>
-        <button class="btn" id="slowfast-check">Klasifikuj</button>
       </div>
       <div class="demo-output large" id="slowfast-out"></div>
     </div>
@@ -839,8 +840,8 @@
         <label>MTU rozhraní (B): <input type="number" id="frag-mtu" value="1500" min="68" max="9000"></label>
         <button class="btn" id="frag-go">Fragmentuj</button>
       </div>
-      <svg id="frag-svg" viewBox="0 0 700 320" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
-      <table style="background:white;margin-top:8px;font-size:13px" id="frag-table">
+      <svg id="frag-svg" viewBox="0 0 700 320" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
+      <table style="background:var(--surface);margin-top:8px;font-size:13px" id="frag-table">
         <thead><tr><th>Fragment</th><th>ID</th><th>MF</th><th>Offset</th><th>Total Length</th><th>Data</th></tr></thead>
         <tbody id="frag-rows"></tbody>
       </table>
@@ -861,7 +862,7 @@
         </label>
         <button class="btn" id="hdr-show">Zobrazit změny</button>
       </div>
-      <table style="background:white;font-size:13px" id="hdr-table">
+      <table style="background:var(--surface);font-size:13px" id="hdr-table">
         <thead><tr><th>Pole</th><th>Před</th><th>Po</th><th>Změna</th></tr></thead>
         <tbody id="hdr-rows"></tbody>
       </table>
@@ -874,7 +875,7 @@
         <button class="btn" id="pmtud-play">Spusti</button>
         <button class="btn btn-secondary" id="pmtud-reset">Reset</button>
       </div>
-      <svg id="pmtud-svg" viewBox="0 0 700 280" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="pmtud-svg" viewBox="0 0 700 280" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <ol class="step-list" id="pmtud-steps"></ol>
     </div>
   </div>
@@ -887,9 +888,8 @@
       <div class="demo-controls">
         <label>Počet paketů toku: <input type="number" id="cef-count" value="100" min="1" max="10000"></label>
         <label>Změna RIB během toku: <input type="checkbox" id="cef-change"></label>
-        <button class="btn" id="cef-run">Simulovat</button>
       </div>
-      <svg id="cef-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="cef-svg" viewBox="0 0 700 240" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output large" id="cef-info"></div>
     </div>
 
@@ -898,9 +898,8 @@
       <div class="demo-title">CEF lookup demonstrace</div>
       <div class="demo-controls">
         <label>Cílová IP: <input type="text" id="cef-ip" value="10.5.23.7"></label>
-        <button class="btn" id="cef-lookup">Lookup</button>
       </div>
-      <svg id="cef-trie-svg" viewBox="0 0 700 200" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="cef-trie-svg" viewBox="0 0 700 200" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="cef-result"></div>
     </div>
   </div>
@@ -927,7 +926,7 @@
     <p>V <span class="key">ACL</span> záleží na pořadí — aplikuje se <em>první vhodné</em> pravidlo. V <span class="key">IP lookup</span> pořadí nezáleží — vítězí <em>nejdelší prefix (LPM)</em>.</p>
     <div class="demo">
       <div class="demo-title">ACL chyba — najděte zastíněné pravidlo</div>
-      <table style="background:white">
+      <table style="background:var(--surface)">
         <thead><tr><th>#</th><th>Akce</th><th>Proto</th><th>Src</th><th>Dst</th><th>Port</th><th>Zastíněno?</th></tr></thead>
         <tbody>
           <tr><td>10</td><td>permit</td><td>TCP</td><td>147.229.0.0/16</td><td>any</td><td>dst 80</td><td id="acl1"></td></tr>
@@ -965,13 +964,11 @@
           </select>
         </label>
         <label>Prefixy: <input type="text" id="trie-prefixes" value="0*,00001*,001*,1*,1000*,1001*,1010*,1011*,111*" style="width:300px"></label>
-        <button class="btn" id="trie-build">Sestav</button>
       </div>
       <div class="demo-controls">
         <label>Hledej klíč: <input type="text" id="trie-key" value="10010110" style="width:140px"></label>
-        <button class="btn" id="trie-lookup">LPM</button>
       </div>
-      <svg id="trie-svg" viewBox="0 0 700 360" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="trie-svg" viewBox="0 0 700 360" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="trie-result"></div>
     </div>
   </div>
@@ -995,8 +992,8 @@
         <button class="btn btn-secondary" id="hicuts-newrules">Nová pravidla</button>
       </div>
       <div class="grid-2">
-        <svg id="hicuts-geo" viewBox="0 0 320 320" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
-        <svg id="hicuts-tree" viewBox="0 0 380 320" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+        <svg id="hicuts-geo" viewBox="0 0 320 320" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
+        <svg id="hicuts-tree" viewBox="0 0 380 320" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       </div>
     </div>
   </div>
@@ -1012,7 +1009,7 @@
         „pravidlo i se shoduje v této dimenzi"). Všech 5 vektorů se AND-uje. <em>První 1</em> ve
         výsledku ukazuje na vítězné pravidlo. Zadejte vlastní paket dole a klikněte „Klasifikuj".
       </div>
-      <table style="background:white" id="bv-rules-table">
+      <table style="background:var(--surface)" id="bv-rules-table">
         <thead><tr><th>R</th><th>Dst IP</th><th>Src IP</th><th>DstP</th><th>SrcP</th><th>Proto</th><th>Akce</th></tr></thead>
         <tbody>
           <tr><td>R1</td><td>147.229.*.*</td><td>*</td><td>25</td><td>*</td><td>*</td><td>permit</td></tr>
@@ -1029,7 +1026,6 @@
         <label>DstP: <input type="number" id="bv-dport" value="53"></label>
         <label>SrcP: <input type="number" id="bv-sport" value="1029"></label>
         <label>Proto: <select id="bv-proto"><option>UDP</option><option>TCP</option><option>ICMP</option></select></label>
-        <button class="btn" id="bv-classify">Klasifikuj</button>
       </div>
       <div id="bv-vectors" class="demo-output large"></div>
     </div>
@@ -1070,7 +1066,7 @@
       <div class="demo-title">2D rules — klikni pro klasifikaci bodu</div>
       <button class="btn" id="geo-new">Nová pravidla</button>
       <button class="btn btn-secondary" id="geo-clear">Vyčisti</button>
-      <svg id="geo-svg" viewBox="0 0 700 360" style="background:white;border:1px solid var(--border);border-radius:4px;cursor:crosshair"></svg>
+      <svg id="geo-svg" viewBox="0 0 700 360" style="background:var(--surface);border:1px solid var(--border);border-radius:4px;cursor:crosshair"></svg>
       <div class="demo-output" id="geo-info">Klikni do prostoru pro klasifikaci bodu.</div>
     </div>
   </div>
@@ -1089,9 +1085,8 @@
       </div>
       <div class="demo-controls">
         <label>Klíč (8 bitů): <input type="text" id="tcam-key" value="10010110" maxlength="8" style="width:90px;font-family:monospace"></label>
-        <button class="btn" id="tcam-lookup">Lookup</button>
       </div>
-      <svg id="tcam-svg" viewBox="0 0 700 280" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="tcam-svg" viewBox="0 0 700 280" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="tcam-result"></div>
       <div class="note">
         <span class="label">Slabiny TCAM</span>
@@ -1120,13 +1115,13 @@
   <div class="subtopic">
     <h3>Problém malého světa (Milgram 1967)</h3>
     <p>160 dopisů z Omahy do Sharon, MA. <span class="key">44 doručeno</span>, medián <span class="num">5</span> prostředníků. Kleinberg 2000: lokální informace stačí na polynomiální cestu.</p>
-    <svg viewBox="0 0 700 200" style="background:white;border:1px solid var(--border);border-radius:4px;max-width:700px">
+    <svg viewBox="0 0 700 200" style="background:var(--surface);border:1px solid var(--border);border-radius:4px;max-width:700px">
       <!-- Milgram bar chart of chain lengths -->
       <text x="350" y="20" text-anchor="middle" font-size="14" font-weight="600">Délka řetězce mezičlánků (44 z 160 doručených)</text>
       <g id="milgram-bars"></g>
-      <line x1="60" y1="170" x2="640" y2="170" stroke="#888"/>
-      <line x1="60" y1="40" x2="60" y2="170" stroke="#888"/>
-      <text x="350" y="195" text-anchor="middle" font-size="12" fill="var(--text-muted)">Počet prostředníků</text>
+      <line x1="60" y1="170" x2="640" y2="170" stroke="var(--text-3)"/>
+      <line x1="60" y1="40" x2="60" y2="170" stroke="var(--text-3)"/>
+      <text x="350" y="195" text-anchor="middle" font-size="12" fill="var(--text-3)">Počet prostředníků</text>
     </svg>
   </div>
 
@@ -1155,7 +1150,7 @@
         <button class="btn" id="unstr-auto">Auto</button>
         <button class="btn btn-secondary" id="unstr-reset">Reset</button>
       </div>
-      <svg id="unstr-svg" viewBox="0 0 700 360" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="unstr-svg" viewBox="0 0 700 360" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="unstr-info" style="margin-top:8px"></div>
     </div>
   </div>
@@ -1168,7 +1163,6 @@
       <div class="demo-controls">
         <label>A (binárně): <input type="text" id="xor-a" value="01010" maxlength="8" style="width:100px;font-family:monospace"></label>
         <label>B: <input type="text" id="xor-b" value="11010" maxlength="8" style="width:100px;font-family:monospace"></label>
-        <button class="btn" id="xor-calc">Vzdálenost</button>
       </div>
       <div class="demo-output large" id="xor-result"></div>
     </div>
@@ -1191,7 +1185,7 @@
         <button class="btn btn-secondary" id="kad-find">FIND_VALUE (auto)</button>
         <button class="btn btn-secondary" id="kad-reset">Reset</button>
       </div>
-      <svg id="kad-svg" viewBox="0 0 720 400" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="kad-svg" viewBox="0 0 720 400" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <ol class="step-list" id="kad-steps"></ol>
     </div>
   </div>
@@ -1204,9 +1198,8 @@
       <div class="demo-controls">
         <label>Zdrojový uzel: <input type="number" id="chord-src" value="8" min="0" max="63"></label>
         <label>Hledat klíč: <input type="number" id="chord-key" value="54" min="0" max="63"></label>
-        <button class="btn" id="chord-find">Najdi</button>
       </div>
-      <svg id="chord-svg" viewBox="0 0 700 380" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="chord-svg" viewBox="0 0 700 380" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <ol class="step-list" id="chord-steps"></ol>
     </div>
   </div>
@@ -1218,7 +1211,7 @@
       <div class="demo-title">LMS s gradientem metriky</div>
       <button class="btn" id="lms-step">Krok</button>
       <button class="btn btn-secondary" id="lms-reset">Reset</button>
-      <svg id="lms-svg" viewBox="0 0 700 360" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="lms-svg" viewBox="0 0 700 360" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="lms-info"></div>
     </div>
   </div>
@@ -1230,9 +1223,8 @@
       <div class="demo-title">Bencoding decoder</div>
       <div class="demo-controls">
         <textarea id="bencode-input" rows="3" style="width:100%;font-family:monospace;font-size:12px">d8:announce41:http://bttracker.debian.org:6969/announce4:infod6:lengthi3977379840e4:name25:debian-12.0-amd64-DVD.iso12:piece lengthi524288eee</textarea>
-        <button class="btn" id="bencode-decode">Decode</button>
       </div>
-      <pre id="bencode-out" style="background:#1e1e1e;color:#d4d4d4;padding:14px;border-radius:4px;font-size:12px;overflow-x:auto;max-height:240px"></pre>
+      <pre id="bencode-out" style="background:var(--bg-3);color:var(--text-3);padding:14px;border-radius:4px;font-size:12px;overflow-x:auto;max-height:240px"></pre>
     </div>
   </div>
 
@@ -1246,7 +1238,7 @@
         <label>LRU obrana? <input type="checkbox" id="sybil-lru" checked></label>
         <button class="btn" id="sybil-go">Simuluj</button>
       </div>
-      <svg id="sybil-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="sybil-svg" viewBox="0 0 700 240" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="sybil-info"></div>
     </div>
   </div>
@@ -1261,7 +1253,7 @@
         <button class="btn" id="bt-step">Krok přenosu</button>
         <button class="btn btn-secondary" id="bt-reset">Reset</button>
       </div>
-      <svg id="bt-svg" viewBox="0 0 700 360" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="bt-svg" viewBox="0 0 700 360" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="bt-info" style="margin-top:8px;font-size:13px"></div>
     </div>
   </div>
@@ -1312,7 +1304,7 @@
         <button class="btn" id="lcs-add">Přidej tok</button>
         <button class="btn btn-secondary" id="lcs-reset">Reset</button>
       </div>
-      <div id="lcs-flows" style="background:white;padding:10px;border-radius:4px;font-family:monospace;font-size:13px;min-height:60px"></div>
+      <div id="lcs-flows" style="background:var(--surface);padding:10px;border-radius:4px;font-family:monospace;font-size:13px;min-height:60px"></div>
       <div class="demo-output" id="lcs-candidate" style="margin-top:8px"></div>
     </div>
   </div>
@@ -1324,9 +1316,8 @@
       <div class="demo-title">SPID — byte frequency + KL divergence</div>
       <div class="demo-controls">
         <label>Vstupní text (paket): <input type="text" id="spid-input" value="GET / HTTP/1.1" style="width:260px"></label>
-        <button class="btn" id="spid-analyze">Analýza</button>
       </div>
-      <svg id="spid-svg" viewBox="0 0 700 220" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="spid-svg" viewBox="0 0 700 220" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="spid-result"></div>
     </div>
 
@@ -1336,7 +1327,6 @@
       <div class="demo-controls">
         <label>P: <input type="text" id="kl-p" value="0.5, 0.3, 0.2"></label>
         <label>Q: <input type="text" id="kl-q" value="0.4, 0.4, 0.2"></label>
-        <button class="btn" id="kl-calc">Spočítat</button>
       </div>
       <div class="demo-output" id="kl-result"></div>
     </div>
@@ -1398,7 +1388,7 @@
       <div class="demo-controls">
         <label>Práh anomálie: <input type="range" id="ads-thresh" min="0" max="100" value="50"><span id="ads-thresh-val">50</span></label>
       </div>
-      <svg id="ads-svg" viewBox="0 0 700 280" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="ads-svg" viewBox="0 0 700 280" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="ads-info"></div>
     </div>
   </div>
@@ -1419,7 +1409,7 @@
         <button class="btn" id="dpa-add">Přidej trénovací sekvenci</button>
         <button class="btn btn-secondary" id="dpa-reset">Reset</button>
       </div>
-      <svg id="dpa-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="dpa-svg" viewBox="0 0 700 240" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-controls">
         <label>Test sekvence: <input type="text" id="dpa-test" value="A,B,C" style="width:200px"></label>
         <button class="btn" id="dpa-check">Anomálie?</button>
@@ -1458,7 +1448,6 @@
           <option value="1e12">1 Tb/s</option>
         </select></label>
         <label>Min. paket (B): <input type="number" id="rate-pkt" value="64" min="40" max="1500"></label>
-        <button class="btn" id="rate-calc">Spočítat</button>
       </div>
       <div class="demo-output large" id="rate-out"></div>
     </div>
@@ -1466,9 +1455,9 @@
 
   <div class="subtopic">
     <h3>sk_buff — struktura paketu v Linuxu</h3>
-    <svg viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px;max-width:700px;display:block;margin:8px auto">
+    <svg viewBox="0 0 700 240" style="background:var(--surface);border:1px solid var(--border);border-radius:4px;max-width:700px;display:block;margin:8px auto">
       <!-- sk_buff structure visualization -->
-      <rect x="40" y="20" width="180" height="200" fill="#e8efff" stroke="var(--accent)" stroke-width="2"/>
+      <rect x="40" y="20" width="180" height="200" fill="var(--info-bg)" stroke="var(--accent)" stroke-width="2"/>
       <text x="130" y="40" text-anchor="middle" font-weight="600" font-size="14">struct sk_buff</text>
       <text x="50" y="68" font-family="monospace" font-size="11">sk (socket)</text>
       <text x="50" y="84" font-family="monospace" font-size="11">dev (net_device)</text>
@@ -1482,26 +1471,26 @@
       <text x="50" y="212" font-family="monospace" font-size="11">network_header</text>
 
       <!-- Packet buffer -->
-      <rect x="300" y="40" width="360" height="160" fill="white" stroke="var(--border)" stroke-width="2"/>
-      <text x="480" y="30" text-anchor="middle" font-size="13" fill="var(--text-muted)">Packet data storage</text>
+      <rect x="300" y="40" width="360" height="160" fill="var(--surface)" stroke="var(--border)" stroke-width="2"/>
+      <text x="480" y="30" text-anchor="middle" font-size="13" fill="var(--text-3)">Packet data storage</text>
 
       <rect x="300" y="40" width="40" height="160" fill="var(--bg-soft)" stroke="none"/>
-      <text x="320" y="120" text-anchor="middle" font-size="10" fill="var(--text-muted)" transform="rotate(-90 320 120)">head</text>
+      <text x="320" y="120" text-anchor="middle" font-size="10" fill="var(--text-3)" transform="rotate(-90 320 120)">head</text>
 
-      <rect x="340" y="40" width="60" height="160" fill="#fff4f0" stroke="var(--border)"/>
+      <rect x="340" y="40" width="60" height="160" fill="var(--danger-bg)" stroke="var(--border)"/>
       <text x="370" y="120" text-anchor="middle" font-size="11">MAC hdr</text>
 
-      <rect x="400" y="40" width="80" height="160" fill="#f0fff5" stroke="var(--border)"/>
+      <rect x="400" y="40" width="80" height="160" fill="var(--success-bg)" stroke="var(--border)"/>
       <text x="440" y="120" text-anchor="middle" font-size="11">IP hdr</text>
 
-      <rect x="480" y="40" width="60" height="160" fill="#f0f6ff" stroke="var(--border)"/>
+      <rect x="480" y="40" width="60" height="160" fill="var(--info-bg)" stroke="var(--border)"/>
       <text x="510" y="120" text-anchor="middle" font-size="11">TCP/UDP</text>
 
       <rect x="540" y="40" width="100" height="160" fill="var(--bg-soft)" stroke="var(--border)"/>
       <text x="590" y="120" text-anchor="middle" font-size="11">payload</text>
 
       <rect x="640" y="40" width="20" height="160" fill="var(--bg-soft)" stroke="none"/>
-      <text x="650" y="120" text-anchor="middle" font-size="10" fill="var(--text-muted)" transform="rotate(-90 650 120)">end</text>
+      <text x="650" y="120" text-anchor="middle" font-size="10" fill="var(--text-3)" transform="rotate(-90 650 120)">end</text>
 
       <!-- Pointers -->
       <path d="M 220 132 L 295 120" stroke="var(--accent)" stroke-width="1.5" fill="none" marker-end="url(#arr8)"/>
@@ -1534,7 +1523,7 @@
         <button class="btn" id="nf-play">Pošli paket</button>
         <button class="btn btn-secondary" id="nf-reset">Reset</button>
       </div>
-      <svg id="nf-svg" viewBox="0 0 700 280" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="nf-svg" viewBox="0 0 700 280" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="nf-info" style="margin-top:8px;font-size:13px"></div>
     </div>
 
@@ -1567,7 +1556,7 @@
         <button class="btn" id="skb-pull">skb_pull (Rx, remove header)</button>
         <button class="btn btn-secondary" id="skb-reset">Reset</button>
       </div>
-      <svg id="skb-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="skb-svg" viewBox="0 0 700 240" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="skb-info"></div>
     </div>
   </div>
@@ -1585,7 +1574,7 @@
         <label>Počet front: <input type="number" id="rss-queues" value="8" min="2" max="32"></label>
         <button class="btn" id="rss-go">Spočítej</button>
       </div>
-      <svg id="rss-svg" viewBox="0 0 700 220" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="rss-svg" viewBox="0 0 700 220" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="rss-info"></div>
     </div>
   </div>
@@ -1607,7 +1596,7 @@
         </label>
         <button class="btn" id="xdp-go">Spusti XDP</button>
       </div>
-      <svg id="xdp-svg" viewBox="0 0 700 280" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="xdp-svg" viewBox="0 0 700 280" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="xdp-info"></div>
     </div>
   </div>
@@ -1619,7 +1608,6 @@
       <div class="demo-title">iptables pravidlo → na který hook?</div>
       <div class="demo-controls">
         <input type="text" id="ipt-rule" value="iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE" style="width:80%;font-family:monospace;font-size:13px">
-        <button class="btn" id="ipt-go">Analyzuj</button>
       </div>
       <div class="demo-output large" id="ipt-out"></div>
     </div>
@@ -1639,7 +1627,7 @@
         </select></label>
         <button class="btn" id="acc-show">Zobrazit</button>
       </div>
-      <svg id="acc-svg" viewBox="0 0 700 260" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="acc-svg" viewBox="0 0 700 260" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output large" id="acc-info"></div>
     </div>
 
@@ -1691,7 +1679,7 @@
         <button class="btn" id="dc-trace">Trasuj flow</button>
         <button class="btn btn-secondary" id="dc-redraw">Překresli</button>
       </div>
-      <svg id="dc-svg" viewBox="0 0 700 360" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="dc-svg" viewBox="0 0 700 360" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="dc-info" style="margin-top:8px"></div>
     </div>
 
@@ -1701,7 +1689,6 @@
       <div class="demo-controls">
         <label>Severovýchodní BW (Gb/s): <input type="number" id="over-up" value="40"></label>
         <label>Jižní BW (Gb/s): <input type="number" id="over-down" value="160"></label>
-        <button class="btn" id="over-calc">Spočítej</button>
       </div>
       <div class="demo-output" id="over-out"></div>
     </div>
@@ -1712,7 +1699,7 @@
     <div class="demo">
       <div class="demo-title">OpenFlow flow entry tester</div>
       <p style="font-size:13px;margin-bottom:8px">Flow tabulka: <em>Rule (Match) + Action + Statistics</em>.</p>
-      <table style="background:white" id="of-table">
+      <table style="background:var(--surface)" id="of-table">
         <thead><tr><th>Pri</th><th>Match (Src MAC, Dst IP, dport, …)</th><th>Action</th><th>Counter</th></tr></thead>
         <tbody id="of-rows"></tbody>
       </table>
@@ -1749,10 +1736,9 @@
         <label>Dst IP: <input type="text" id="ecmp-dst" value="10.5.2.99" style="width:120px"></label>
         <label>Src port: <input type="number" id="ecmp-sport" value="54321"></label>
         <label>Dst port: <input type="number" id="ecmp-dport" value="443"></label>
-        <button class="btn" id="ecmp-go">Trasuj</button>
         <button class="btn btn-secondary" id="ecmp-random">100 random flow</button>
       </div>
-      <svg id="ecmp-svg" viewBox="0 0 700 320" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="ecmp-svg" viewBox="0 0 700 320" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="ecmp-info"></div>
     </div>
   </div>
@@ -1767,7 +1753,7 @@
         <label>Délka flow (paketů): <input type="number" id="of-len" value="3" min="1" max="1000"></label>
         <button class="btn" id="of-compare">Porovnej</button>
       </div>
-      <svg id="of-compare-svg" viewBox="0 0 700 240" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="of-compare-svg" viewBox="0 0 700 240" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="of-compare-info"></div>
     </div>
   </div>
@@ -1790,7 +1776,7 @@
   <div class="subtopic">
     <h3>P4 — programovatelný data plane</h3>
     <p>OpenFlow má pevná match polia. P4 nechá programátora definovat <em>všechno</em>: hlavičky, parser, akce.</p>
-    <pre style="background:#1e1e1e;color:#d4d4d4;padding:14px;border-radius:4px;font-size:12px;overflow-x:auto">header_type ethernet_t {
+    <pre style="background:var(--bg-3);color:var(--text-3);padding:14px;border-radius:4px;font-size:12px;overflow-x:auto">header_type ethernet_t {
     fields {
         dstAddr  : 48;
         srcAddr  : 48;
@@ -1816,7 +1802,7 @@ parser ethernet {
       <div class="demo-controls">
         <button class="btn" id="p4-go">Spusti paket pipeline</button>
       </div>
-      <svg id="p4-svg" viewBox="0 0 700 280" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="p4-svg" viewBox="0 0 700 280" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
       <div class="demo-output" id="p4-info"></div>
     </div>
 
@@ -1824,7 +1810,7 @@ parser ethernet {
     <p>VxLAN obaluje L2 rámec do UDP/IP. VNI (24-bit Virtual Network ID) umožňuje 16M tenant sítí na sdílené fyzické infrastruktuře. Klíč pro multi-tenant DC.</p>
     <div class="demo">
       <div class="demo-title">VxLAN paket struktura</div>
-      <svg id="vxlan-svg" viewBox="0 0 700 200" style="background:white;border:1px solid var(--border);border-radius:4px"></svg>
+      <svg id="vxlan-svg" viewBox="0 0 700 200" style="background:var(--surface);border:1px solid var(--border);border-radius:4px"></svg>
     </div>
   </div>
 </section>

@@ -49,7 +49,7 @@ function initRouteSelector() {
     const dst = document.getElementById('route-dst').textContent;
     rows.innerHTML = ROUTES_POOL.map(r => {
       const m = isMatch(r.prefix, dst);
-      return `<tr style="${m ? 'background:#f0fff5' : 'opacity:0.5'}"><td class="mono">${r.prefix}</td><td>${r.src}</td><td class="mono">${r.ad}</td><td class="mono">${r.metric}</td><td class="mono">${r.nh}</td><td>${m ? '✓ match' : '— ne'}</td></tr>`;
+      return `<tr style="${m ? 'background:var(--success-bg)' : 'opacity:0.5'}"><td class="mono">${r.prefix}</td><td>${r.src}</td><td class="mono">${r.ad}</td><td class="mono">${r.metric}</td><td class="mono">${r.nh}</td><td>${m ? '<strong style="color:var(--success)">✓ match</strong>' : '— ne'}</td></tr>`;
     }).join('');
 
     // Pick winner: longest prefix → lowest AD → lowest metric
@@ -60,7 +60,7 @@ function initRouteSelector() {
     }
     matches.sort((a, b) => prefixLen(b.prefix) - prefixLen(a.prefix) || a.ad - b.ad || a.metric - b.metric);
     const winner = matches[0];
-    document.getElementById('route-result').innerHTML = `<strong>Vítěz: ${winner.prefix} přes ${winner.src} (AD=${winner.ad}, metrika=${winner.metric}) → next-hop ${winner.nh}</strong><br><span style="color:var(--text-muted);font-size:12px">Pravidlo: nejdříve nejdelší prefix, pak nejnižší AD, pak nejnižší metrika.</span>`;
+    document.getElementById('route-result').innerHTML = `<strong>Vítěz: ${winner.prefix} přes ${winner.src} (AD=${winner.ad}, metrika=${winner.metric}) → next-hop ${winner.nh}</strong><br><span style="color:var(--text-3);font-size:12px">Pravidlo: nejdříve nejdelší prefix, pak nejnižší AD, pak nejnižší metrika.</span>`;
   }
 
   document.getElementById('route-randomize').addEventListener('click', () => {
@@ -170,7 +170,7 @@ function initShortestPath() {
   function draw() {
     const svg = document.getElementById('sp-svg');
     clearSvg(svg);
-    arrowDef(svg, 'sp-arr', '#666');
+    arrowDef(svg, 'sp-arr', 'var(--text-3)');
     // edges
     edges.forEach(([a, b, w]) => {
       const na = nodes.find(n => n.id === a);
@@ -178,19 +178,19 @@ function initShortestPath() {
       const usedForward = state && state.prev[b] === a;
       const usedBack = state && state.prev[a] === b;
       const used = usedForward || usedBack;
-      svgEl('line', { x1: na.x, y1: na.y, x2: nb.x, y2: nb.y, stroke: used ? '#0066cc' : '#bbb', 'stroke-width': used ? 3 : 1.5 }, svg);
+      svgEl('line', { x1: na.x, y1: na.y, x2: nb.x, y2: nb.y, stroke: used ? 'var(--info)' : 'var(--border-2)', 'stroke-width': used ? 3 : 1.5 }, svg);
       const mx = (na.x + nb.x) / 2, my = (na.y + nb.y) / 2;
-      svgEl('text', { x: mx, y: my - 4, 'text-anchor': 'middle', 'font-size': 11, fill: '#444', text: String(w) }, svg);
+      svgEl('text', { x: mx, y: my - 4, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--text-2)', text: String(w) }, svg);
     });
     // nodes
     nodes.forEach(n => {
       const visited = state && state.visited.has(n.id);
       const current = state && state.current === n.id;
-      const fill = current ? '#0066cc' : visited ? '#b8d4ff' : 'white';
-      svgEl('circle', { cx: n.x, cy: n.y, r: 22, fill, stroke: current ? '#003d7a' : '#0066cc', 'stroke-width': current ? 3 : 2 }, svg);
-      svgEl('text', { x: n.x, y: n.y + 4, 'text-anchor': 'middle', 'font-family': 'monospace', 'font-size': 14, 'font-weight': 700, fill: current ? 'white' : '#1a1a1a', text: n.id }, svg);
+      const fill = current ? 'var(--info)' : visited ? 'var(--info-bg)' : 'var(--surface)';
+      svgEl('circle', { cx: n.x, cy: n.y, r: 22, fill, stroke: current ? 'var(--info-strong)' : 'var(--info)', 'stroke-width': current ? 3 : 2 }, svg);
+      svgEl('text', { x: n.x, y: n.y + 4, 'text-anchor': 'middle', 'font-family': 'monospace', 'font-size': 14, 'font-weight': 700, fill: current ? 'white' : 'var(--text)', text: n.id }, svg);
       const d = state ? (state.dist[n.id] === Infinity ? '∞' : state.dist[n.id]) : '∞';
-      svgEl('text', { x: n.x, y: n.y + 38, 'text-anchor': 'middle', 'font-size': 11, fill: '#7a3ea1', text: `d=${d}` }, svg);
+      svgEl('text', { x: n.x, y: n.y + 38, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--secondary)', text: `d=${d}` }, svg);
     });
     // steps
     const ol = document.getElementById('sp-steps');
@@ -272,16 +272,16 @@ function initCountToInf() {
       { id: 'C', x: 560, y: 100, val: state ? state.C_to_dst : 3 },
     ];
     // edges
-    svgEl('line', { x1: 70, y1: 100, x2: 180, y2: 100, stroke: state && state.broken ? '#c73a1f' : '#0066cc', 'stroke-width': 3, 'stroke-dasharray': state && state.broken ? '4 3' : 'none' }, svg);
-    if (state && state.broken) svgEl('text', { x: 125, y: 90, 'text-anchor': 'middle', 'font-size': 14, fill: '#c73a1f', text: '✗' }, svg);
-    svgEl('line', { x1: 220, y1: 100, x2: 360, y2: 100, stroke: '#0066cc', 'stroke-width': 2 }, svg);
-    svgEl('line', { x1: 400, y1: 100, x2: 540, y2: 100, stroke: '#0066cc', 'stroke-width': 2 }, svg);
+    svgEl('line', { x1: 70, y1: 100, x2: 180, y2: 100, stroke: state && state.broken ? 'var(--danger)' : 'var(--info)', 'stroke-width': 3, 'stroke-dasharray': state && state.broken ? '4 3' : 'none' }, svg);
+    if (state && state.broken) svgEl('text', { x: 125, y: 90, 'text-anchor': 'middle', 'font-size': 14, fill: 'var(--danger)', text: '✗' }, svg);
+    svgEl('line', { x1: 220, y1: 100, x2: 360, y2: 100, stroke: 'var(--info)', 'stroke-width': 2 }, svg);
+    svgEl('line', { x1: 400, y1: 100, x2: 540, y2: 100, stroke: 'var(--info)', 'stroke-width': 2 }, svg);
     // node circles
     nodes.forEach(n => {
-      svgEl('circle', { cx: n.x, cy: n.y, r: 22, fill: 'white', stroke: '#0066cc', 'stroke-width': 2 }, svg);
+      svgEl('circle', { cx: n.x, cy: n.y, r: 22, fill: 'var(--surface)', stroke: 'var(--info)', 'stroke-width': 2 }, svg);
       svgEl('text', { x: n.x, y: n.y + 5, 'text-anchor': 'middle', 'font-weight': 700, text: n.id }, svg);
       if (n.val != null) {
-        svgEl('text', { x: n.x, y: n.y + 42, 'text-anchor': 'middle', 'font-size': 12, fill: n.val >= 16 ? '#c73a1f' : '#7a3ea1', text: `d→cíl = ${n.val >= 16 ? '∞' : n.val}` }, svg);
+        svgEl('text', { x: n.x, y: n.y + 42, 'text-anchor': 'middle', 'font-size': 12, fill: n.val >= 16 ? 'var(--danger)' : 'var(--secondary)', text: `d→cíl = ${n.val >= 16 ? '∞' : n.val}` }, svg);
       }
     });
     const ol = document.getElementById('cti-steps');
@@ -300,9 +300,9 @@ function initOSPFCost() {
     const cost = Math.max(1, Math.round(100 / bw));
     document.getElementById('ospf-out').innerHTML =
       `Cost = 100 Mbps / ${bw} Mbps = <strong>${cost}</strong>` +
-      `<br><span style="color:var(--text-muted);font-size:12px">Cisco používá minimální cost 1. Vyšší bandwidth → nižší cost (lepší cesta).</span>`;
+      `<br><span style="color:var(--text-3);font-size:12px">Cisco používá minimální cost 1. Vyšší bandwidth → nižší cost (lepší cesta).</span>`;
   };
-  document.getElementById('ospf-calc').addEventListener('click', calc);
+  document.getElementById('ospf-bw').addEventListener('input', calc);
   calc();
 }
 
@@ -345,7 +345,7 @@ function initBGPSelector() {
       const tied = candidates.filter(c => cmp(c, top) === 0);
       reasons.push(`<strong>${name}</strong>: ${tied.map(t => t.name).join(', ')}${tied.length === 1 ? ' ← rozhodnutí' : ' (remíza, zkusím další pravidlo)'}`);
       if (tied.length === 1) {
-        document.getElementById('bgp-result').innerHTML = reasons.join('<br>') + `<br><br><strong style="color:var(--num)">Vítěz: ${top.name}</strong>`;
+        document.getElementById('bgp-result').innerHTML = reasons.join('<br>') + `<br><br><strong style="color:var(--success)">Vítěz: ${top.name}</strong>`;
         return;
       }
       candidates = tied;
@@ -371,58 +371,58 @@ function initMPLS() {
   function draw() {
     const svg = document.getElementById('mpls-svg');
     clearSvg(svg);
-    arrowDef(svg, 'mpls-arr', '#0066cc');
+    arrowDef(svg, 'mpls-arr', 'var(--info)');
     lsrs.forEach((n, i) => {
-      const color = n.type === 'lsr' ? '#b8d4ff' : n.type.includes('ler') ? '#ffe9a3' : '#f0f0f0';
-      svgEl('rect', { x: n.x - 50, y: n.y - 22, width: 100, height: 44, fill: color, stroke: '#0066cc', 'stroke-width': 2, rx: 6 }, svg);
+      const color = n.type === 'lsr' ? 'var(--info-bg)' : n.type.includes('ler') ? 'var(--warning-bg)' : 'var(--bg-2)';
+      svgEl('rect', { x: n.x - 50, y: n.y - 22, width: 100, height: 44, fill: color, stroke: 'var(--info)', 'stroke-width': 2, rx: 6 }, svg);
       svgEl('text', { x: n.x, y: n.y - 4, 'text-anchor': 'middle', 'font-weight': 600, 'font-size': 12, text: n.id }, svg);
-      svgEl('text', { x: n.x, y: n.y + 14, 'text-anchor': 'middle', 'font-size': 10, fill: '#444', text: n.label }, svg);
+      svgEl('text', { x: n.x, y: n.y + 14, 'text-anchor': 'middle', 'font-size': 10, fill: 'var(--text-2)', text: n.label }, svg);
       if (i < lsrs.length - 1) {
         const next = lsrs[i + 1];
-        svgEl('line', { x1: n.x + 50, y1: n.y, x2: next.x - 50, y2: next.y, stroke: '#888', 'stroke-width': 1.5 }, svg);
+        svgEl('line', { x1: n.x + 50, y1: n.y, x2: next.x - 50, y2: next.y, stroke: 'var(--text-3)', 'stroke-width': 1.5 }, svg);
       }
     });
     if (played) {
       const packet = svgEl('g', {}, svg);
-      svgEl('rect', { x: 30, y: 165, width: 130, height: 50, fill: '#fff', stroke: '#0066cc', 'stroke-width': 2 }, packet);
-      svgEl('text', { x: 95, y: 158, 'text-anchor': 'middle', 'font-size': 11, fill: '#7a3ea1', text: 'Paket prochází:' }, packet);
+      svgEl('rect', { x: 30, y: 165, width: 130, height: 50, fill: 'var(--node-fill)', stroke: 'var(--info)', 'stroke-width': 2 }, packet);
+      svgEl('text', { x: 95, y: 158, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--secondary)', text: 'Paket prochází:' }, packet);
       // Animation steps
-      svgEl('rect', { x: 35, y: 170, width: 40, height: 18, fill: '#ffe9a3', stroke: '#cc8f00' }, packet);
+      svgEl('rect', { x: 35, y: 170, width: 40, height: 18, fill: 'var(--warning-bg)', stroke: 'var(--warning)' }, packet);
       svgEl('text', { x: 55, y: 183, 'text-anchor': 'middle', 'font-size': 10, text: 'L2' }, packet);
-      svgEl('rect', { x: 75, y: 170, width: 80, height: 18, fill: '#f0fff5', stroke: '#0a7a3d' }, packet);
+      svgEl('rect', { x: 75, y: 170, width: 80, height: 18, fill: 'var(--success-bg)', stroke: 'var(--success)' }, packet);
       svgEl('text', { x: 115, y: 183, 'text-anchor': 'middle', 'font-size': 10, text: 'IP' }, packet);
-      svgEl('text', { x: 95, y: 205, 'text-anchor': 'middle', 'font-size': 10, fill: '#666', text: 'na CE1: čistý IP' }, packet);
+      svgEl('text', { x: 95, y: 205, 'text-anchor': 'middle', 'font-size': 10, fill: 'var(--text-3)', text: 'na CE1: čistý IP' }, packet);
 
       svgEl('g', { transform: 'translate(170, 0)' }, packet);
-      svgEl('rect', { x: 170, y: 170, width: 30, height: 18, fill: '#ffe9a3', stroke: '#cc8f00' }, svg);
+      svgEl('rect', { x: 170, y: 170, width: 30, height: 18, fill: 'var(--warning-bg)', stroke: 'var(--warning)' }, svg);
       svgEl('text', { x: 185, y: 183, 'text-anchor': 'middle', 'font-size': 10, text: 'L2' }, svg);
-      svgEl('rect', { x: 200, y: 170, width: 40, height: 18, fill: '#fce5ff', stroke: '#7a3ea1' }, svg);
+      svgEl('rect', { x: 200, y: 170, width: 40, height: 18, fill: 'var(--secondary-bg)', stroke: 'var(--secondary)' }, svg);
       svgEl('text', { x: 220, y: 183, 'text-anchor': 'middle', 'font-size': 9, text: 'lbl 17' }, svg);
-      svgEl('rect', { x: 240, y: 170, width: 60, height: 18, fill: '#f0fff5', stroke: '#0a7a3d' }, svg);
+      svgEl('rect', { x: 240, y: 170, width: 60, height: 18, fill: 'var(--success-bg)', stroke: 'var(--success)' }, svg);
       svgEl('text', { x: 270, y: 183, 'text-anchor': 'middle', 'font-size': 10, text: 'IP' }, svg);
-      svgEl('text', { x: 235, y: 205, 'text-anchor': 'middle', 'font-size': 10, fill: '#666', text: 'po PUSH: shim 17' }, svg);
+      svgEl('text', { x: 235, y: 205, 'text-anchor': 'middle', 'font-size': 10, fill: 'var(--text-3)', text: 'po PUSH: shim 17' }, svg);
 
-      svgEl('rect', { x: 310, y: 170, width: 30, height: 18, fill: '#ffe9a3', stroke: '#cc8f00' }, svg);
+      svgEl('rect', { x: 310, y: 170, width: 30, height: 18, fill: 'var(--warning-bg)', stroke: 'var(--warning)' }, svg);
       svgEl('text', { x: 325, y: 183, 'text-anchor': 'middle', 'font-size': 10, text: 'L2' }, svg);
-      svgEl('rect', { x: 340, y: 170, width: 40, height: 18, fill: '#fce5ff', stroke: '#7a3ea1' }, svg);
+      svgEl('rect', { x: 340, y: 170, width: 40, height: 18, fill: 'var(--secondary-bg)', stroke: 'var(--secondary)' }, svg);
       svgEl('text', { x: 360, y: 183, 'text-anchor': 'middle', 'font-size': 9, text: 'lbl 23' }, svg);
-      svgEl('rect', { x: 380, y: 170, width: 60, height: 18, fill: '#f0fff5', stroke: '#0a7a3d' }, svg);
+      svgEl('rect', { x: 380, y: 170, width: 60, height: 18, fill: 'var(--success-bg)', stroke: 'var(--success)' }, svg);
       svgEl('text', { x: 410, y: 183, 'text-anchor': 'middle', 'font-size': 10, text: 'IP' }, svg);
-      svgEl('text', { x: 375, y: 205, 'text-anchor': 'middle', 'font-size': 10, fill: '#666', text: 'SWAP 17→23' }, svg);
+      svgEl('text', { x: 375, y: 205, 'text-anchor': 'middle', 'font-size': 10, fill: 'var(--text-3)', text: 'SWAP 17→23' }, svg);
 
-      svgEl('rect', { x: 450, y: 170, width: 30, height: 18, fill: '#ffe9a3', stroke: '#cc8f00' }, svg);
+      svgEl('rect', { x: 450, y: 170, width: 30, height: 18, fill: 'var(--warning-bg)', stroke: 'var(--warning)' }, svg);
       svgEl('text', { x: 465, y: 183, 'text-anchor': 'middle', 'font-size': 10, text: 'L2' }, svg);
-      svgEl('rect', { x: 480, y: 170, width: 40, height: 18, fill: '#fce5ff', stroke: '#7a3ea1' }, svg);
+      svgEl('rect', { x: 480, y: 170, width: 40, height: 18, fill: 'var(--secondary-bg)', stroke: 'var(--secondary)' }, svg);
       svgEl('text', { x: 500, y: 183, 'text-anchor': 'middle', 'font-size': 9, text: 'lbl 42' }, svg);
-      svgEl('rect', { x: 520, y: 170, width: 60, height: 18, fill: '#f0fff5', stroke: '#0a7a3d' }, svg);
+      svgEl('rect', { x: 520, y: 170, width: 60, height: 18, fill: 'var(--success-bg)', stroke: 'var(--success)' }, svg);
       svgEl('text', { x: 550, y: 183, 'text-anchor': 'middle', 'font-size': 10, text: 'IP' }, svg);
-      svgEl('text', { x: 515, y: 205, 'text-anchor': 'middle', 'font-size': 10, fill: '#666', text: 'SWAP 23→42' }, svg);
+      svgEl('text', { x: 515, y: 205, 'text-anchor': 'middle', 'font-size': 10, fill: 'var(--text-3)', text: 'SWAP 23→42' }, svg);
 
-      svgEl('rect', { x: 595, y: 170, width: 30, height: 18, fill: '#ffe9a3', stroke: '#cc8f00' }, svg);
+      svgEl('rect', { x: 595, y: 170, width: 30, height: 18, fill: 'var(--warning-bg)', stroke: 'var(--warning)' }, svg);
       svgEl('text', { x: 610, y: 183, 'text-anchor': 'middle', 'font-size': 10, text: 'L2' }, svg);
-      svgEl('rect', { x: 625, y: 170, width: 60, height: 18, fill: '#f0fff5', stroke: '#0a7a3d' }, svg);
+      svgEl('rect', { x: 625, y: 170, width: 60, height: 18, fill: 'var(--success-bg)', stroke: 'var(--success)' }, svg);
       svgEl('text', { x: 655, y: 183, 'text-anchor': 'middle', 'font-size': 10, text: 'IP' }, svg);
-      svgEl('text', { x: 645, y: 205, 'text-anchor': 'middle', 'font-size': 10, fill: '#666', text: 'po POP: čistý IP' }, svg);
+      svgEl('text', { x: 645, y: 205, 'text-anchor': 'middle', 'font-size': 10, fill: 'var(--text-3)', text: 'po POP: čistý IP' }, svg);
     }
     document.getElementById('mpls-info').innerHTML = played
       ? `LSP <code>CE1 → LER-in → LSR1 → LSR2 → LER-out → CE2</code>. Labely jsou <em>locally significant</em> — každý LSR má svou LIB s mapováním in-label → out-label.`
@@ -508,21 +508,21 @@ function initLSAFlood() {
     LINKS.forEach(([a, b]) => {
       const na = NODES.find(n => n.id === a);
       const nb = NODES.find(n => n.id === b);
-      svgEl('line', { x1: na.x, y1: na.y, x2: nb.x, y2: nb.y, stroke: '#bbb', 'stroke-width': 1.5 }, svg);
+      svgEl('line', { x1: na.x, y1: na.y, x2: nb.x, y2: nb.y, stroke: 'var(--border-2)', 'stroke-width': 1.5 }, svg);
     });
     // Current wave arrows
     if (waveIdx > 0 && waveIdx <= waves.length) {
-      arrowDef(svg, 'lsa-arr', '#c73a1f');
+      arrowDef(svg, 'lsa-arr', 'var(--danger)');
       waves[waveIdx - 1].forEach(({ from, to }) => {
         const a = NODES.find(n => n.id === from);
         const b = NODES.find(n => n.id === to);
-        svgEl('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: '#c73a1f', 'stroke-width': 3, 'marker-end': 'url(#lsa-arr)' }, svg);
+        svgEl('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: 'var(--danger)', 'stroke-width': 3, 'marker-end': 'url(#lsa-arr)' }, svg);
       });
     }
     NODES.forEach(n => {
-      const fill = n.id === 'R1' ? '#c73a1f' : received.has(n.id) ? '#0a7a3d' : '#fff';
-      svgEl('circle', { cx: n.x, cy: n.y, r: 22, fill, stroke: '#444', 'stroke-width': 2 }, svg);
-      svgEl('text', { x: n.x, y: n.y + 4, 'text-anchor': 'middle', 'font-weight': 600, fill: received.has(n.id) || n.id === 'R1' ? 'white' : '#1a1a1a', text: n.id }, svg);
+      const fill = n.id === 'R1' ? 'var(--danger)' : received.has(n.id) ? 'var(--success)' : 'var(--node-fill)';
+      svgEl('circle', { cx: n.x, cy: n.y, r: 22, fill, stroke: 'var(--text-2)', 'stroke-width': 2 }, svg);
+      svgEl('text', { x: n.x, y: n.y + 4, 'text-anchor': 'middle', 'font-weight': 600, fill: received.has(n.id) || n.id === 'R1' ? 'white' : 'var(--text)', text: n.id }, svg);
     });
     const ol = document.getElementById('lsa-steps');
     ol.innerHTML = log.slice(-8).map((l, i, arr) => `<li class="${i === arr.length - 1 ? 'active' : 'done'}">${esc(l)}</li>`).join('');
@@ -546,34 +546,33 @@ function initEIGRPFeas() {
     clearSvg(svg);
     // Draw 4 nodes A (us), B, C, target
     const nodes = [
-      { id: 'A (my)', x: 100, y: 120, color: '#0066cc' },
-      { id: 'B', x: 350, y: 60, color: '#7a3ea1' },
-      { id: 'C', x: 350, y: 180, color: '#cc8f00' },
-      { id: 'cíl', x: 600, y: 120, color: '#0a7a3d' },
+      { id: 'A (my)', x: 100, y: 120, color: 'var(--info)' },
+      { id: 'B', x: 350, y: 60, color: 'var(--secondary)' },
+      { id: 'C', x: 350, y: 180, color: 'var(--warning)' },
+      { id: 'cíl', x: 600, y: 120, color: 'var(--success)' },
     ];
     nodes.forEach(n => {
-      svgEl('circle', { cx: n.x, cy: n.y, r: 22, fill: 'white', stroke: n.color, 'stroke-width': 2.5 }, svg);
+      svgEl('circle', { cx: n.x, cy: n.y, r: 22, fill: 'var(--surface)', stroke: n.color, 'stroke-width': 2.5 }, svg);
       svgEl('text', { x: n.x, y: n.y + 4, 'text-anchor': 'middle', 'font-weight': 700, fill: n.color, text: n.id }, svg);
     });
     // Edges
-    svgEl('line', { x1: 122, y1: 110, x2: 328, y2: 70, stroke: '#888', 'stroke-width': 2 }, svg);
-    svgEl('line', { x1: 122, y1: 130, x2: 328, y2: 170, stroke: '#888', 'stroke-width': 2 }, svg);
-    svgEl('line', { x1: 372, y1: 60, x2: 578, y2: 110, stroke: '#888', 'stroke-width': 2 }, svg);
-    svgEl('line', { x1: 372, y1: 180, x2: 578, y2: 130, stroke: '#888', 'stroke-width': 2 }, svg);
+    svgEl('line', { x1: 122, y1: 110, x2: 328, y2: 70, stroke: 'var(--text-3)', 'stroke-width': 2 }, svg);
+    svgEl('line', { x1: 122, y1: 130, x2: 328, y2: 170, stroke: 'var(--text-3)', 'stroke-width': 2 }, svg);
+    svgEl('line', { x1: 372, y1: 60, x2: 578, y2: 110, stroke: 'var(--text-3)', 'stroke-width': 2 }, svg);
+    svgEl('line', { x1: 372, y1: 180, x2: 578, y2: 130, stroke: 'var(--text-3)', 'stroke-width': 2 }, svg);
     // Labels
     svgEl('text', { x: 100, y: 220, 'text-anchor': 'middle', 'font-size': 12, text: `FD = ${fd}` }, svg);
-    svgEl('text', { x: 350, y: 30, 'text-anchor': 'middle', 'font-size': 12, fill: '#7a3ea1', text: `B→cíl: ${rdB}` }, svg);
-    svgEl('text', { x: 350, y: 215, 'text-anchor': 'middle', 'font-size': 12, fill: '#cc8f00', text: `C→cíl: ${rdC}` }, svg);
+    svgEl('text', { x: 350, y: 30, 'text-anchor': 'middle', 'font-size': 12, fill: 'var(--secondary)', text: `B→cíl: ${rdB}` }, svg);
+    svgEl('text', { x: 350, y: 215, 'text-anchor': 'middle', 'font-size': 12, fill: 'var(--warning)', text: `C→cíl: ${rdC}` }, svg);
 
     const okB = rdB < fd;
     const okC = rdC < fd;
     document.getElementById('eigrp-out').innerHTML =
       `<table style="font-size:13px"><tr><th>Soused</th><th>RD</th><th>FD</th><th>RD &lt; FD?</th><th>Status</th></tr>` +
-      `<tr><td>B</td><td class="mono">${rdB}</td><td class="mono">${fd}</td><td>${okB ? '✓' : '✗'}</td><td style="color:${okB ? 'var(--num)' : 'var(--warn)'}">${okB ? 'FEASIBLE — loop-free, lze použít' : 'NE-feasible — možná smyčka, EIGRP odmítá'}</td></tr>` +
-      `<tr><td>C</td><td class="mono">${rdC}</td><td class="mono">${fd}</td><td>${okC ? '✓' : '✗'}</td><td style="color:${okC ? 'var(--num)' : 'var(--warn)'}">${okC ? 'FEASIBLE' : 'NE-feasible'}</td></tr></table>` +
-      `<div style="font-size:12px;color:var(--text-muted);margin-top:6px">Logika: pokud má soused k cíli kratší cestu, určitě nejde přes nás — kdyby ano, jeho vzdálenost by zahrnovala naši FD.</div>`;
+      `<tr><td>B</td><td class="mono">${rdB}</td><td class="mono">${fd}</td><td>${okB ? '✓' : '✗'}</td><td style="color:${okB ? 'var(--success)' : 'var(--danger)'}">${okB ? 'FEASIBLE — loop-free, lze použít' : 'NE-feasible — možná smyčka, EIGRP odmítá'}</td></tr>` +
+      `<tr><td>C</td><td class="mono">${rdC}</td><td class="mono">${fd}</td><td>${okC ? '✓' : '✗'}</td><td style="color:${okC ? 'var(--success)' : 'var(--danger)'}">${okC ? 'FEASIBLE' : 'NE-feasible'}</td></tr></table>` +
+      `<div style="font-size:12px;color:var(--text-3);margin-top:6px">Logika: pokud má soused k cíli kratší cestu, určitě nejde přes nás — kdyby ano, jeho vzdálenost by zahrnovala naši FD.</div>`;
   }
-  document.getElementById('eigrp-check').addEventListener('click', draw);
   ['eigrp-fd','eigrp-rdb','eigrp-rdc'].forEach(id => document.getElementById(id).addEventListener('input', draw));
   draw();
 }
@@ -602,9 +601,9 @@ function initNSAP() {
       `<tr><td>Area ID</td><td>${area.length / 2} B</td><td class="mono">${area || '—'}</td><td>Oblast (analog OSPF Area)</td></tr>` +
       `<tr><td>System ID</td><td>6 B</td><td class="mono">${sysId}</td><td>Unikátní identifikátor uzlu (jako MAC)</td></tr>` +
       `<tr><td>NSEL</td><td>1 B</td><td class="mono">${nsel}</td><td>${nsel === '00' ? 'Network Entity Title (router sám)' : 'Service selector'}</td></tr></table>` +
-      `<div style="font-size:12px;color:var(--text-muted);margin-top:6px"><strong>Klíčový rozdíl od IP:</strong> NSAP identifikuje <em>uzel jako celek</em>, ne jednotlivá rozhraní.</div>`;
+      `<div style="font-size:12px;color:var(--text-3);margin-top:6px"><strong>Klíčový rozdíl od IP:</strong> NSAP identifikuje <em>uzel jako celek</em>, ne jednotlivá rozhraní.</div>`;
   }
-  document.getElementById('nsap-parse').addEventListener('click', parse);
+  document.getElementById('nsap-input').addEventListener('input', parse);
   parse();
 }
 
@@ -618,31 +617,30 @@ function initMPLSStack() {
     svgEl('text', { x: W / 2, y: 25, 'text-anchor': 'middle', 'font-weight': 600, 'font-size': 14, text: `MPLS label stack (hloubka ${depth})` }, svg);
 
     // L2 frame
-    svgEl('rect', { x: 30, y: 60, width: 80, height: 60, fill: '#ffe9a3', stroke: '#cc8f00', 'stroke-width': 2 }, svg);
+    svgEl('rect', { x: 30, y: 60, width: 80, height: 60, fill: 'var(--warning-bg)', stroke: 'var(--warning)', 'stroke-width': 2 }, svg);
     svgEl('text', { x: 70, y: 95, 'text-anchor': 'middle', 'font-size': 13, text: 'L2 hdr' }, svg);
 
     // Labels (top → bottom of stack)
-    const colors = ['#7a3ea1', '#0066cc', '#c73a1f', '#0a7a3d', '#cc8f00'];
+    const colors = ['var(--secondary)', 'var(--info)', 'var(--danger)', 'var(--success)', 'var(--warning)'];
     for (let i = 0; i < depth; i++) {
       const x = 120 + i * 100;
       const isBottom = i === depth - 1;
-      svgEl('rect', { x, y: 60, width: 90, height: 60, fill: '#fce5ff', stroke: colors[i], 'stroke-width': 2 }, svg);
+      svgEl('rect', { x, y: 60, width: 90, height: 60, fill: 'var(--secondary-bg)', stroke: colors[i], 'stroke-width': 2 }, svg);
       svgEl('text', { x: x + 45, y: 80, 'text-anchor': 'middle', 'font-weight': 600, 'font-size': 11, text: `Label ${depth - i}` }, svg);
-      svgEl('text', { x: x + 45, y: 96, 'text-anchor': 'middle', 'font-size': 10, fill: '#444', text: '20b + 3b EXP' }, svg);
-      svgEl('text', { x: x + 45, y: 110, 'text-anchor': 'middle', 'font-size': 10, fill: isBottom ? '#c73a1f' : '#444', 'font-weight': isBottom ? 700 : 400, text: `S=${isBottom ? '1' : '0'} TTL` }, svg);
-      svgEl('text', { x: x + 45, y: 135, 'text-anchor': 'middle', 'font-size': 9, fill: '#666', text: i === 0 ? '← vnější (core)' : isBottom ? '← vnitřní (service)' : '' }, svg);
+      svgEl('text', { x: x + 45, y: 96, 'text-anchor': 'middle', 'font-size': 10, fill: 'var(--text-2)', text: '20b + 3b EXP' }, svg);
+      svgEl('text', { x: x + 45, y: 110, 'text-anchor': 'middle', 'font-size': 10, fill: isBottom ? 'var(--danger)' : 'var(--text-2)', 'font-weight': isBottom ? 700 : 400, text: `S=${isBottom ? '1' : '0'} TTL` }, svg);
+      svgEl('text', { x: x + 45, y: 135, 'text-anchor': 'middle', 'font-size': 9, fill: 'var(--text-3)', text: i === 0 ? '← vnější (core)' : isBottom ? '← vnitřní (service)' : '' }, svg);
     }
 
     // IP packet
     const ipX = 120 + depth * 100;
-    svgEl('rect', { x: ipX, y: 60, width: W - ipX - 30, height: 60, fill: '#f0fff5', stroke: '#0a7a3d', 'stroke-width': 2 }, svg);
+    svgEl('rect', { x: ipX, y: 60, width: W - ipX - 30, height: 60, fill: 'var(--success-bg)', stroke: 'var(--success)', 'stroke-width': 2 }, svg);
     svgEl('text', { x: (ipX + W - 30) / 2, y: 95, 'text-anchor': 'middle', 'font-size': 13, text: 'IP packet (payload)' }, svg);
 
-    svgEl('text', { x: W / 2, y: 170, 'text-anchor': 'middle', 'font-size': 12, fill: '#666', text: 'Vnější label řeší core (P routery), vnitřní service (VPN, TE tunel)' }, svg);
-    svgEl('text', { x: W / 2, y: 195, 'text-anchor': 'middle', 'font-size': 11, fill: '#7a3ea1', text: 'PHP (Penultimate Hop Popping): poslední LSR sundá vnější label před egress, ušetří POP operaci' }, svg);
-    svgEl('text', { x: W / 2, y: 215, 'text-anchor': 'middle', 'font-size': 11, fill: '#7a3ea1', text: 'S bit = 1 znamená "tohle je poslední label, pod ním je už nativní paket"' }, svg);
+    svgEl('text', { x: W / 2, y: 170, 'text-anchor': 'middle', 'font-size': 12, fill: 'var(--text-3)', text: 'Vnější label řeší core (P routery), vnitřní service (VPN, TE tunel)' }, svg);
+    svgEl('text', { x: W / 2, y: 195, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--secondary)', text: 'PHP (Penultimate Hop Popping): poslední LSR sundá vnější label před egress, ušetří POP operaci' }, svg);
+    svgEl('text', { x: W / 2, y: 215, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--secondary)', text: 'S bit = 1 znamená "tohle je poslední label, pod ním je už nativní paket"' }, svg);
   }
-  document.getElementById('stack-show').addEventListener('click', draw);
   document.getElementById('stack-depth').addEventListener('input', draw);
   draw();
 }

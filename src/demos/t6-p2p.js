@@ -33,11 +33,11 @@ function initMilgram() {
     const h = 120 * d.count / maxC;
     const x = startX + i * (barW + 5);
     const y = 170 - h;
-    svgEl('rect', { x, y, width: barW, height: h, fill: '#7a3ea1', opacity: 0.7 }, g);
-    svgEl('text', { x: x + barW / 2, y: y - 4, 'text-anchor': 'middle', 'font-size': 11, fill: '#444', text: d.count }, g);
-    svgEl('text', { x: x + barW / 2, y: 184, 'text-anchor': 'middle', 'font-size': 11, fill: '#666', text: d.len }, g);
+    svgEl('rect', { x, y, width: barW, height: h, fill: 'var(--secondary)', opacity: 0.7 }, g);
+    svgEl('text', { x: x + barW / 2, y: y - 4, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--text-2)', text: d.count }, g);
+    svgEl('text', { x: x + barW / 2, y: 184, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--text-3)', text: d.len }, g);
     if (d.len === 5) {
-      svgEl('text', { x: x + barW / 2, y: y - 18, 'text-anchor': 'middle', 'font-size': 11, fill: '#c73a1f', 'font-weight': 600, text: 'medián' }, g);
+      svgEl('text', { x: x + barW / 2, y: y - 18, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--danger)', 'font-weight': 600, text: 'medián' }, g);
     }
   });
 }
@@ -48,6 +48,12 @@ function initUnstructured() {
   const NUM_NODES = 14;
   const TARGET_NODE = 11;
   let nodes, edges, visited, queue, ttl, step, log;
+
+  function readTTL() {
+    const el = document.getElementById('unstr-ttl');
+    const v = el ? parseInt(el.value, 10) : 3;
+    return Math.max(1, Math.min(10, isNaN(v) ? 3 : v));
+  }
 
   function initGraph() {
     nodes = [];
@@ -61,7 +67,6 @@ function initUnstructured() {
       });
     }
     edges = new Set();
-    // Each node has 3-5 neighbors
     nodes.forEach((n, i) => {
       const k = 3 + Math.floor(Math.random() * 2);
       const targets = shuffle(nodes.filter(m => m.id !== i)).slice(0, k);
@@ -70,9 +75,20 @@ function initUnstructured() {
         edges.add(key);
       });
     });
+    const method = document.getElementById('unstr-method')?.value || 'flood';
     visited = new Set([0]);
-    queue = [{ node: 0, ttl: 3, from: null }];
-    ttl = 3;
+    // Initial TTL depends on method:
+    // - flood: user-set TTL (one big flood, one shot)
+    // - ring: starts at 1 and grows on each step (so first step = small ring)
+    // - walk / lms: user-set TTL = max walker steps
+    const userTtl = readTTL();
+    if (method === 'ring') {
+      ttl = 1;
+      queue = [{ node: 0, ttl: 1, from: null }];
+    } else {
+      ttl = userTtl;
+      queue = [{ node: 0, ttl: userTtl, from: null }];
+    }
     step = 0;
     log = [];
   }
@@ -108,25 +124,37 @@ function initUnstructured() {
       log.push(`Krok ${step}: rozesláno ${next.length} dotazů (TTL klesá)`);
       queue = next;
     } else if (method === 'ring') {
-      // Like flood, but limited TTL
-      ttl++;
-      visited = new Set([0]);
-      const next = [{ node: 0, ttl, from: null }];
-      let curr = next.slice();
-      for (let depth = 0; depth < ttl; depth++) {
-        const nx = [];
-        curr.forEach(it => {
-          const ns = getNeighbors(it.node).filter(n => !visited.has(n));
-          ns.forEach(n => {
-            visited.add(n);
-            nx.push({ node: n, ttl: ttl - depth - 1, from: it.node });
-            if (n === TARGET_NODE) log.push(`✓ NALEZENO! S TTL=${ttl}, krok ${step}`);
+      // Expanding ring: each step re-floods from scratch with progressively
+      // larger TTL until the user-set max is reached. Demonstrates the
+      // "start small, expand only if not found" optimization.
+      const maxTtl = readTTL();
+      if (ttl > maxTtl) {
+        log.push(`Krok ${step}: TTL=${ttl} přesáhlo max (${maxTtl}) — zastavuji`);
+        queue = [];
+      } else {
+        visited = new Set([0]);
+        let curr = [{ node: 0, depth: 0 }];
+        let foundAtThisTtl = false;
+        for (let depth = 0; depth < ttl; depth++) {
+          const nx = [];
+          curr.forEach(it => {
+            const ns = getNeighbors(it.node).filter(n => !visited.has(n));
+            ns.forEach(n => {
+              visited.add(n);
+              nx.push({ node: n, depth: depth + 1 });
+              if (n === TARGET_NODE) foundAtThisTtl = true;
+            });
           });
-        });
-        curr = nx;
+          curr = nx;
+        }
+        queue = [];
+        log.push(`Krok ${step}: expanding ring s TTL=${ttl}, navštíveno ${visited.size}` +
+                 (foundAtThisTtl ? ` ✓ NALEZENO!` : ` — nenalezeno, rozšiřuji`));
+        if (!foundAtThisTtl) {
+          ttl++;
+          queue = [{ node: 0, depth: 0 }];  // marker that we should continue
+        }
       }
-      queue = [];
-      log.push(`Krok ${step}: expanding ring s TTL=${ttl}, navštíveno ${visited.size}`);
     } else if (method === 'walk') {
       const item = queue[0];
       const ns = getNeighbors(item.node).filter(n => n !== item.from);
@@ -158,17 +186,17 @@ function initUnstructured() {
     // edges
     edges.forEach(e => {
       const [a, b] = e.split('-').map(Number);
-      svgEl('line', { x1: nodes[a].x, y1: nodes[a].y, x2: nodes[b].x, y2: nodes[b].y, stroke: '#ccc', 'stroke-width': 1 }, svg);
+      svgEl('line', { x1: nodes[a].x, y1: nodes[a].y, x2: nodes[b].x, y2: nodes[b].y, stroke: 'var(--border-2)', 'stroke-width': 1 }, svg);
     });
     // nodes
     nodes.forEach(n => {
       const isTarget = n.id === TARGET_NODE;
       const isVisited = visited.has(n.id);
       const inQueue = queue.some(q => q.node === n.id);
-      const fill = isTarget ? '#0a7a3d' : inQueue ? '#0066cc' : isVisited ? '#b8d4ff' : 'white';
-      const stroke = isTarget ? '#053820' : inQueue ? '#003d7a' : '#999';
+      const fill = isTarget ? 'var(--success)' : inQueue ? 'var(--info)' : isVisited ? 'var(--info-bg)' : 'var(--surface)';
+      const stroke = isTarget ? 'var(--success)' : inQueue ? 'var(--info-strong)' : 'var(--text-3)';
       svgEl('circle', { cx: n.x, cy: n.y, r: 16, fill, stroke, 'stroke-width': 2 }, svg);
-      svgEl('text', { x: n.x, y: n.y + 4, 'text-anchor': 'middle', 'font-family': 'monospace', 'font-size': 12, fill: (isTarget || inQueue) ? 'white' : '#444', text: n.id }, svg);
+      svgEl('text', { x: n.x, y: n.y + 4, 'text-anchor': 'middle', 'font-family': 'monospace', 'font-size': 12, fill: (isTarget || inQueue) ? 'white' : 'var(--text-2)', text: n.id }, svg);
     });
     svgEl('text', { x: 350, y: 30, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 600, text: `Cíl: uzel ${TARGET_NODE} (zelený). Zdroj: uzel 0.` }, svg);
     document.getElementById('unstr-info').innerHTML = log.slice(-5).map(l => `<div>${esc(l)}</div>`).join('');
@@ -189,6 +217,7 @@ function initUnstructured() {
   });
   document.getElementById('unstr-reset').addEventListener('click', reset);
   document.getElementById('unstr-method').addEventListener('change', reset);
+  document.getElementById('unstr-ttl').addEventListener('input', reset);
   reset();
 }
 
@@ -213,11 +242,11 @@ function initXOR() {
     document.getElementById('xor-result').innerHTML =
       `<table style="font-family:monospace;font-size:14px"><tr><td>A</td><td>${a}</td><td>(${aNum})</td></tr>` +
       `<tr><td>B</td><td>${b}</td><td>(${bNum})</td></tr>` +
-      `<tr style="border-top:1px solid #999"><td>XOR</td><td style="color:#7a3ea1;font-weight:700">${xorBin}</td><td>(${xor})</td></tr></table>` +
+      `<tr style="border-top:1px solid #999"><td>XOR</td><td style="color:var(--secondary);font-weight:700">${xorBin}</td><td>(${xor})</td></tr></table>` +
       `<div style="margin-top:8px">Vzdálenost <strong>d(A, B) = ${xor}</strong>. Společný prefix: <strong>${prefix} bitů</strong>.</div>` +
-      `<div style="font-size:12px;color:var(--text-muted);margin-top:4px">Bity, ve kterých se ID liší, jsou přesně hloubka stromu, kde se uzly rozcházejí. Proto má Kademlia logaritmické k-buckety.</div>`;
+      `<div style="font-size:12px;color:var(--text-3);margin-top:4px">Bity, ve kterých se ID liší, jsou přesně hloubka stromu, kde se uzly rozcházejí. Proto má Kademlia logaritmické k-buckety.</div>`;
   };
-  document.getElementById('xor-calc').addEventListener('click', calc);
+  ['xor-a', 'xor-b'].forEach(id => document.getElementById(id).addEventListener('input', calc));
   calc();
 }
 
@@ -228,6 +257,28 @@ function initKademlia() {
   const W = 720, H = 400;
   let state = { self: 2, target: 26, traversal: [], shownHops: 0 };
 
+  // Return the set of nodes that `node` knows about — up to k nodes per
+  // k-bucket (distance range [2^i, 2^(i+1))). This is the LOCAL knowledge
+  // each node has; without this constraint the demo would always reach the
+  // target in one hop (the lookup would just pick the target globally).
+  function knownNodesOf(node) {
+    const known = new Set();
+    for (let i = 0; i < 5; i++) {
+      const lo = 1 << i;
+      const hi = 1 << (i + 1);
+      const inBucket = [];
+      for (let j = 0; j < N; j++) {
+        if (j === node) continue;
+        const d = j ^ node;
+        if (d >= lo && d < hi) inBucket.push(j);
+      }
+      // First k in numerical order (deterministic for demo)
+      inBucket.sort((a, b) => a - b);
+      inBucket.slice(0, k).forEach(n => known.add(n));
+    }
+    return known;
+  }
+
   function computeTraversal() {
     state.self = parseInt(document.getElementById('kad-self').value, 10);
     state.target = parseInt(document.getElementById('kad-target').value, 10);
@@ -236,17 +287,20 @@ function initKademlia() {
     let iter = 0;
     while (current !== state.target && iter < 8) {
       const xor = current ^ state.target;
-      const candidates = [];
-      for (let i = 0; i < N; i++) {
-        if (i === current) continue;
-        const dist = i ^ state.target;
-        if (dist < xor) candidates.push({ id: i, dist });
-      }
-      if (candidates.length === 0) break;
-      candidates.sort((a, b) => a.dist - b.dist);
-      const next = candidates[0];
-      state.traversal.push({ from: current, to: next.id, dist: next.dist, xorBefore: xor });
-      current = next.id;
+      // Only consider nodes the current node KNOWS (its k-buckets).
+      const known = knownNodesOf(current);
+      let best = current;
+      let bestDist = xor;
+      known.forEach(n => {
+        const d = n ^ state.target;
+        if (d < bestDist) { bestDist = d; best = n; }
+      });
+      // If none of the known nodes is closer, terminate — closest known
+      // candidate to the target IS the answer (real Kademlia returns this
+      // node, which is responsible for the key in the DHT).
+      if (best === current) break;
+      state.traversal.push({ from: current, to: best, dist: bestDist, xorBefore: xor });
+      current = best;
       iter++;
     }
   }
@@ -273,8 +327,8 @@ function initKademlia() {
   function draw() {
     const svg = document.getElementById('kad-svg');
     clearSvg(svg);
-    arrowDef(svg, 'kad-arr-cur',  '#D6553D');
-    arrowDef(svg, 'kad-arr-past', '#7a3ea1');
+    arrowDef(svg, 'kad-arr-cur',  'var(--accent)');
+    arrowDef(svg, 'kad-arr-past', 'var(--secondary)');
 
     const ringR = 125;
     const cx = W / 2 + 60, cy = H / 2 + 10;
@@ -283,23 +337,23 @@ function initKademlia() {
     const reached = cur && cur.to === state.target;
 
     // Phase banner
-    svgEl('rect', { x: 0, y: 0, width: W, height: 50, fill: '#F4F4F0' }, svg);
-    svgEl('text', { x: 18, y: 22, 'font-size': 14, 'font-weight': 700, fill: '#0F1419',
+    svgEl('rect', { x: 0, y: 0, width: W, height: 50, fill: 'var(--bg-2)' }, svg);
+    svgEl('text', { x: 18, y: 22, 'font-size': 14, 'font-weight': 700, fill: 'var(--node-stroke)',
       text: `FIND_VALUE  ·  klíč ${state.target}  ·  z uzlu ${state.self}` }, svg);
     if (cur) {
       const xorFromCurrent = cur.to ^ state.target;
-      svgEl('text', { x: 18, y: 40, 'font-size': 12, fill: reached ? '#1F7A4E' : '#D6553D', 'font-weight': 600,
+      svgEl('text', { x: 18, y: 40, 'font-size': 12, fill: reached ? 'var(--success)' : 'var(--accent)', 'font-weight': 600,
         text: reached
           ? `✓ Cíl nalezen po ${totalHops} skocích — XOR dist=0`
           : `◉ Hop ${state.shownHops}: ${cur.from} → ${cur.to}, XOR zmenšeno z ${cur.xorBefore} na ${xorFromCurrent}`,
       }, svg);
     } else {
-      svgEl('text', { x: 18, y: 40, 'font-size': 12, fill: '#525969', 'font-weight': 600,
+      svgEl('text', { x: 18, y: 40, 'font-size': 12, fill: 'var(--text-2)', 'font-weight': 600,
         text: '⏸ Klikni „Další hop" pro postupné zobrazení cesty' }, svg);
     }
-    svgEl('text', { x: W - 18, y: 22, 'text-anchor': 'end', 'font-size': 12, fill: '#525969',
+    svgEl('text', { x: W - 18, y: 22, 'text-anchor': 'end', 'font-size': 12, fill: 'var(--text-2)',
       text: `hop ${state.shownHops} / ${totalHops}` }, svg);
-    svgEl('text', { x: W - 18, y: 40, 'text-anchor': 'end', 'font-size': 11, fill: '#525969', 'font-style': 'italic',
+    svgEl('text', { x: W - 18, y: 40, 'text-anchor': 'end', 'font-size': 11, fill: 'var(--text-2)', 'font-style': 'italic',
       text: `očekáváno ~log₂${N} = ${Math.log2(N).toFixed(1)} skoků` }, svg);
 
     // Ring of nodes
@@ -313,19 +367,19 @@ function initKademlia() {
       const isVisited = state.traversal.slice(0, state.shownHops).some(s => s.from === i || s.to === i);
       const isCurrent = cur && cur.to === i;
 
-      let fill = '#fff', stroke = '#BFBFB2', textFill = '#0F1419';
-      if (isTarget && reached) { fill = '#1F7A4E'; stroke = '#053820'; textFill = '#fff'; }
-      else if (isTarget) { fill = '#FFEAD9'; stroke = '#D6553D'; }
-      else if (isSelf) { fill = '#1F4B8A'; stroke = '#0F2A4E'; textFill = '#fff'; }
-      else if (isCurrent) { fill = '#D6553D'; stroke = '#8E1F1A'; textFill = '#fff'; }
-      else if (isVisited) { fill = '#F4DCD7'; stroke = '#D6553D'; }
+      let fill = 'var(--node-fill)', stroke = 'var(--border-2)', textFill = 'var(--node-stroke)';
+      if (isTarget && reached) { fill = 'var(--success)'; stroke = 'var(--success)'; textFill = 'var(--node-fill)'; }
+      else if (isTarget) { fill = 'var(--warning-bg)'; stroke = 'var(--accent)'; }
+      else if (isSelf) { fill = 'var(--info-strong)'; stroke = 'var(--info-strong)'; textFill = 'var(--node-fill)'; }
+      else if (isCurrent) { fill = 'var(--accent)'; stroke = 'var(--danger)'; textFill = 'var(--node-fill)'; }
+      else if (isVisited) { fill = 'var(--accent-soft)'; stroke = 'var(--accent)'; }
 
       svgEl('circle', { cx: x, cy: y, r: 13, fill, stroke, 'stroke-width': 2 }, svg);
       svgEl('text', { x, y: y + 4, 'text-anchor': 'middle', 'font-family': 'monospace', 'font-size': 11, fill: textFill, text: i }, svg);
     }
     // Center label
-    svgEl('text', { x: cx, y: cy - 4, 'text-anchor': 'middle', 'font-size': 11, fill: '#525969', text: `N=${N}, k=${k}` }, svg);
-    svgEl('text', { x: cx, y: cy + 10, 'text-anchor': 'middle', 'font-size': 10, fill: '#525969', text: 'XOR metric' }, svg);
+    svgEl('text', { x: cx, y: cy - 4, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--text-2)', text: `N=${N}, k=${k}` }, svg);
+    svgEl('text', { x: cx, y: cy + 10, 'text-anchor': 'middle', 'font-size': 10, fill: 'var(--text-2)', text: 'XOR metric' }, svg);
 
     // Traversal arrows
     for (let i = 0; i < state.shownHops; i++) {
@@ -341,20 +395,20 @@ function initKademlia() {
       svgEl('path', {
         d: `M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`,
         fill: 'none',
-        stroke: isCurrent ? '#D6553D' : '#7a3ea1',
+        stroke: isCurrent ? 'var(--accent)' : 'var(--secondary)',
         'stroke-width': isCurrent ? 3 : 2,
         opacity: isCurrent ? 1 : 0.55,
         'marker-end': `url(#${isCurrent ? 'kad-arr-cur' : 'kad-arr-past'})`,
       }, svg);
       // Hop number label
-      svgEl('text', { x: mx, y: my, 'text-anchor': 'middle', 'font-size': 10, fill: isCurrent ? '#D6553D' : '#7a3ea1', 'font-weight': 600, text: `#${i + 1}` }, svg);
+      svgEl('text', { x: mx, y: my, 'text-anchor': 'middle', 'font-size': 10, fill: isCurrent ? 'var(--accent)' : 'var(--secondary)', 'font-weight': 600, text: `#${i + 1}` }, svg);
     }
 
     // k-buckets panel (left)
-    svgEl('rect', { x: 18, y: 58, width: 215, height: 200, fill: '#F4F4F0', stroke: '#DCDCD2' }, svg);
-    svgEl('text', { x: 28, y: 76, 'font-family': 'monospace', 'font-size': 11, 'font-weight': 700, fill: '#0F1419',
+    svgEl('rect', { x: 18, y: 58, width: 215, height: 200, fill: 'var(--bg-2)', stroke: 'var(--border)' }, svg);
+    svgEl('text', { x: 28, y: 76, 'font-family': 'monospace', 'font-size': 11, 'font-weight': 700, fill: 'var(--node-stroke)',
       text: `k-buckety uzlu ${state.self}` }, svg);
-    svgEl('text', { x: 28, y: 90, 'font-size': 10, fill: '#525969', text: `k=${k}, vzd. třída [2^i, 2^(i+1))` }, svg);
+    svgEl('text', { x: 28, y: 90, 'font-size': 10, fill: 'var(--text-2)', text: `k=${k}, vzd. třída [2^i, 2^(i+1))` }, svg);
     for (let i = 0; i < 5; i++) {
       const y = 110 + i * 28;
       const inBucket = [];
@@ -363,9 +417,9 @@ function initKademlia() {
         const d = j ^ state.self;
         if (d >= (1 << i) && d < (1 << (i + 1))) inBucket.push(j);
       }
-      svgEl('text', { x: 28, y, 'font-family': 'monospace', 'font-size': 10, fill: '#7a3ea1',
+      svgEl('text', { x: 28, y, 'font-family': 'monospace', 'font-size': 10, fill: 'var(--secondary)',
         text: `bucket ${i} [${1 << i}-${(1 << (i + 1)) - 1}]:` }, svg);
-      svgEl('text', { x: 28, y: y + 12, 'font-family': 'monospace', 'font-size': 11, fill: '#0F1419',
+      svgEl('text', { x: 28, y: y + 12, 'font-family': 'monospace', 'font-size': 11, fill: 'var(--node-stroke)',
         text: inBucket.slice(0, k).join(', ') || '—' }, svg);
     }
 
@@ -453,31 +507,31 @@ function initBitTorrent() {
   function draw() {
     const svg = document.getElementById('bt-svg');
     clearSvg(svg);
-    arrowDef(svg, 'bt-arr', '#0066cc');
+    arrowDef(svg, 'bt-arr', 'var(--info)');
     // Draw peers
     peers.forEach(p => {
       const isSeed = p.id === 'seed';
       const isDone = p.pieces.size === NUM_PIECES;
-      const fill = isSeed ? '#0a7a3d' : isDone ? '#b8d4ff' : '#fff';
-      svgEl('rect', { x: p.x - 50, y: p.y - 30, width: 100, height: 60, fill, stroke: isSeed ? '#053820' : '#0066cc', 'stroke-width': 2, rx: 6 }, svg);
-      svgEl('text', { x: p.x, y: p.y - 16, 'text-anchor': 'middle', 'font-weight': 600, 'font-size': 13, fill: isSeed ? 'white' : '#1a1a1a', text: p.id }, svg);
+      const fill = isSeed ? 'var(--success)' : isDone ? 'var(--info-bg)' : 'var(--node-fill)';
+      svgEl('rect', { x: p.x - 50, y: p.y - 30, width: 100, height: 60, fill, stroke: isSeed ? 'var(--success)' : 'var(--info)', 'stroke-width': 2, rx: 6 }, svg);
+      svgEl('text', { x: p.x, y: p.y - 16, 'text-anchor': 'middle', 'font-weight': 600, 'font-size': 13, fill: isSeed ? 'white' : 'var(--text)', text: p.id }, svg);
       // Pieces bar
       for (let i = 0; i < NUM_PIECES; i++) {
         const has = p.pieces.has(i);
-        svgEl('rect', { x: p.x - 36 + i * 12, y: p.y - 4, width: 10, height: 14, fill: has ? '#0066cc' : '#ddd', stroke: '#888', 'stroke-width': 0.5 }, svg);
+        svgEl('rect', { x: p.x - 36 + i * 12, y: p.y - 4, width: 10, height: 14, fill: has ? 'var(--info)' : 'var(--border)', stroke: 'var(--text-3)', 'stroke-width': 0.5 }, svg);
       }
-      svgEl('text', { x: p.x, y: p.y + 24, 'text-anchor': 'middle', 'font-size': 10, fill: '#666', text: `${p.pieces.size}/${NUM_PIECES} dílů` }, svg);
+      svgEl('text', { x: p.x, y: p.y + 24, 'text-anchor': 'middle', 'font-size': 10, fill: 'var(--text-3)', text: `${p.pieces.size}/${NUM_PIECES} dílů` }, svg);
     });
     // Last transfers
     peers.forEach(p => {
       if (p.lastFrom) {
         const from = peers.find(o => o.id === p.lastFrom);
         if (from) {
-          svgEl('line', { x1: from.x, y1: from.y, x2: p.x, y2: p.y, stroke: '#7a3ea1', 'stroke-width': 1.5, 'stroke-dasharray': '4 2', 'marker-end': 'url(#bt-arr)' }, svg);
+          svgEl('line', { x1: from.x, y1: from.y, x2: p.x, y2: p.y, stroke: 'var(--secondary)', 'stroke-width': 1.5, 'stroke-dasharray': '4 2', 'marker-end': 'url(#bt-arr)' }, svg);
         }
       }
     });
-    document.getElementById('bt-info').innerHTML = `Krok ${step}. ${peers.filter(p => p.pieces.size === NUM_PIECES).length}/${peers.length} peerů má kompletní soubor. <span style="color:var(--text-muted)">Heuristika „rarest first" — peer si stahuje nejvzácnější chybějící díl.</span>`;
+    document.getElementById('bt-info').innerHTML = `Krok ${step}. ${peers.filter(p => p.pieces.size === NUM_PIECES).length}/${peers.length} peerů má kompletní soubor. <span style="color:var(--text-3)">Heuristika „rarest first" — peer si stahuje nejvzácnější chybějící díl.</span>`;
   }
 
   document.getElementById('bt-join').addEventListener('click', addPeer);
@@ -541,14 +595,14 @@ function initChord() {
     clearSvg(svg);
     const cx = 350, cy = 190, r = 130;
     // Draw circle
-    svgEl('circle', { cx, cy, r, fill: 'none', stroke: '#ddd', 'stroke-width': 2 }, svg);
+    svgEl('circle', { cx, cy, r, fill: 'none', stroke: 'var(--border)', 'stroke-width': 2 }, svg);
 
     // Draw all slot labels (sparsely)
     for (let i = 0; i < SIZE; i += 4) {
       const a = (i / SIZE) * 2 * Math.PI - Math.PI / 2;
       const lx = cx + Math.cos(a) * (r + 15);
       const ly = cy + Math.sin(a) * (r + 15);
-      svgEl('text', { x: lx, y: ly + 3, 'text-anchor': 'middle', 'font-size': 9, fill: '#aaa', text: i }, svg);
+      svgEl('text', { x: lx, y: ly + 3, 'text-anchor': 'middle', 'font-size': 9, fill: 'var(--text-3)', text: i }, svg);
     }
 
     // Draw nodes
@@ -557,8 +611,8 @@ function initChord() {
       const nx = cx + Math.cos(a) * r;
       const ny = cy + Math.sin(a) * r;
       const onPath = path.includes(n);
-      svgEl('circle', { cx: nx, cy: ny, r: 12, fill: onPath ? '#0066cc' : '#fff', stroke: '#0066cc', 'stroke-width': 2 }, svg);
-      svgEl('text', { x: nx, y: ny + 4, 'text-anchor': 'middle', 'font-size': 10, fill: onPath ? 'white' : '#1a1a1a', text: n }, svg);
+      svgEl('circle', { cx: nx, cy: ny, r: 12, fill: onPath ? 'var(--info)' : 'var(--node-fill)', stroke: 'var(--info)', 'stroke-width': 2 }, svg);
+      svgEl('text', { x: nx, y: ny + 4, 'text-anchor': 'middle', 'font-size': 10, fill: onPath ? 'white' : 'var(--text)', text: n }, svg);
     });
 
     // Highlight key location
@@ -566,12 +620,12 @@ function initChord() {
       const a = (key / SIZE) * 2 * Math.PI - Math.PI / 2;
       const kx = cx + Math.cos(a) * r;
       const ky = cy + Math.sin(a) * r;
-      svgEl('circle', { cx: kx, cy: ky, r: 8, fill: '#c73a1f', opacity: 0.8 }, svg);
-      svgEl('text', { x: kx, y: ky - 14, 'text-anchor': 'middle', 'font-size': 10, fill: '#c73a1f', 'font-weight': 600, text: `klíč ${key}` }, svg);
+      svgEl('circle', { cx: kx, cy: ky, r: 8, fill: 'var(--danger)', opacity: 0.8 }, svg);
+      svgEl('text', { x: kx, y: ky - 14, 'text-anchor': 'middle', 'font-size': 10, fill: 'var(--danger)', 'font-weight': 600, text: `klíč ${key}` }, svg);
     }
 
     // Draw path arrows
-    arrowDef(svg, 'chord-arr', '#7a3ea1');
+    arrowDef(svg, 'chord-arr', 'var(--secondary)');
     for (let i = 0; i < path.length - 1; i++) {
       const a1 = (path[i] / SIZE) * 2 * Math.PI - Math.PI / 2;
       const a2 = (path[i + 1] / SIZE) * 2 * Math.PI - Math.PI / 2;
@@ -582,11 +636,11 @@ function initChord() {
       // bezier through center
       const mx = (x1 + x2) / 2 + (cx - (x1 + x2) / 2) * 0.5;
       const my = (y1 + y2) / 2 + (cy - (y1 + y2) / 2) * 0.5;
-      svgEl('path', { d: `M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`, fill: 'none', stroke: '#7a3ea1', 'stroke-width': 2.5, 'marker-end': 'url(#chord-arr)' }, svg);
+      svgEl('path', { d: `M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`, fill: 'none', stroke: 'var(--secondary)', 'stroke-width': 2.5, 'marker-end': 'url(#chord-arr)' }, svg);
     }
 
     svgEl('text', { x: cx, y: cy - 4, 'text-anchor': 'middle', 'font-weight': 700, 'font-size': 14, text: `Chord ring 2^${M} = ${SIZE}` }, svg);
-    svgEl('text', { x: cx, y: cy + 12, 'text-anchor': 'middle', 'font-size': 11, fill: '#666', text: `${NODES.length} aktivních uzlů` }, svg);
+    svgEl('text', { x: cx, y: cy + 12, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--text-3)', text: `${NODES.length} aktivních uzlů` }, svg);
 
     // Step log
     const ol = document.getElementById('chord-steps');
@@ -595,8 +649,9 @@ function initChord() {
       (key != null ? `<li>klíč ${key} se uloží na successor(${key}) = <strong>${successor(key)}</strong></li>` : '')
       : '<li>Klikněte „Najdi" pro start.</li>';
   }
-  document.getElementById('chord-find').addEventListener('click', find);
-  draw();
+  ['chord-src', 'chord-key'].forEach(id =>
+    document.getElementById(id).addEventListener('input', find));
+  find();
 }
 
 // ------- LMS step-by-step -------
@@ -673,26 +728,26 @@ function initLMS() {
     clearSvg(svg);
     edges.forEach(e => {
       const [a, b] = e.split('-').map(Number);
-      svgEl('line', { x1: nodes[a].x, y1: nodes[a].y, x2: nodes[b].x, y2: nodes[b].y, stroke: '#ccc' }, svg);
+      svgEl('line', { x1: nodes[a].x, y1: nodes[a].y, x2: nodes[b].x, y2: nodes[b].y, stroke: 'var(--border-2)' }, svg);
     });
-    arrowDef(svg, 'lms-arr', '#7a3ea1');
+    arrowDef(svg, 'lms-arr', 'var(--secondary)');
     for (let i = 0; i < path.length - 1; i++) {
-      svgEl('line', { x1: nodes[path[i]].x, y1: nodes[path[i]].y, x2: nodes[path[i + 1]].x, y2: nodes[path[i + 1]].y, stroke: '#7a3ea1', 'stroke-width': 2.5, 'marker-end': 'url(#lms-arr)' }, svg);
+      svgEl('line', { x1: nodes[path[i]].x, y1: nodes[path[i]].y, x2: nodes[path[i + 1]].x, y2: nodes[path[i + 1]].y, stroke: 'var(--secondary)', 'stroke-width': 2.5, 'marker-end': 'url(#lms-arr)' }, svg);
     }
     nodes.forEach(n => {
       const isWalker = n.id === walker;
       const isTarget = n.isTarget;
       const onPath = path.includes(n.id);
-      const fill = isWalker ? '#0066cc' : isTarget ? '#0a7a3d' : onPath ? '#b8d4ff' : '#fff';
-      svgEl('circle', { cx: n.x, cy: n.y, r: 18, fill, stroke: '#444', 'stroke-width': 2 }, svg);
-      svgEl('text', { x: n.x, y: n.y - 2, 'text-anchor': 'middle', 'font-size': 11, fill: (isWalker || isTarget) ? 'white' : '#1a1a1a', text: n.id }, svg);
-      svgEl('text', { x: n.x, y: n.y + 11, 'text-anchor': 'middle', 'font-size': 9, fill: (isWalker || isTarget) ? '#fff' : '#666', text: `d=${n.metric}` }, svg);
+      const fill = isWalker ? 'var(--info)' : isTarget ? 'var(--success)' : onPath ? 'var(--info-bg)' : 'var(--node-fill)';
+      svgEl('circle', { cx: n.x, cy: n.y, r: 18, fill, stroke: 'var(--text-2)', 'stroke-width': 2 }, svg);
+      svgEl('text', { x: n.x, y: n.y - 2, 'text-anchor': 'middle', 'font-size': 11, fill: (isWalker || isTarget) ? 'white' : 'var(--text)', text: n.id }, svg);
+      svgEl('text', { x: n.x, y: n.y + 11, 'text-anchor': 'middle', 'font-size': 9, fill: (isWalker || isTarget) ? 'var(--node-fill)' : 'var(--text-3)', text: `d=${n.metric}` }, svg);
     });
     document.getElementById('lms-info').innerHTML =
       `<strong>Fáze: ${phase === 'walk' ? 'NÁHODNÝ PRŮCHOD' : 'DETERMINISTICKÝ FINIŠ'}</strong>. ` +
       `Walker je v uzlu <strong>${walker}</strong> (d=${nodes[walker].metric}). Cíl (lokální minimum): uzel <strong>${target}</strong> (d=${nodes[target].metric}). ` +
       `Cesta: ${path.join(' → ')}.<br>` +
-      `<span style="font-size:12px;color:var(--text-muted)">Po náhodném průchodu (walk-length) LMS přejde do deterministického snižování metriky — uzel je lokální minimum, když má menší d než všichni sousedi.</span>`;
+      `<span style="font-size:12px;color:var(--text-3)">Po náhodném průchodu (walk-length) LMS přejde do deterministického snižování metriky — uzel je lokální minimum, když má menší d než všichni sousedi.</span>`;
   }
   document.getElementById('lms-step').addEventListener('click', step);
   document.getElementById('lms-reset').addEventListener('click', init);
@@ -747,7 +802,7 @@ function initBencoding() {
       document.getElementById('bencode-out').textContent = 'Chyba: ' + e.message;
     }
   }
-  document.getElementById('bencode-decode').addEventListener('click', go);
+  document.getElementById('bencode-input').addEventListener('input', go);
   go();
 }
 
@@ -781,20 +836,23 @@ function initSybil() {
     for (let i = 0; i < k; i++) {
       const sybilProb = bucketFillSybil / k;
       const isSybil = i / k < sybilProb;
-      svgEl('rect', { x: 30 + i * 80, y: 50, width: 70, height: 60, fill: isSybil ? '#c73a1f' : '#0a7a3d', opacity: 0.7 }, svg);
+      svgEl('rect', { x: 30 + i * 80, y: 50, width: 70, height: 60, fill: isSybil ? 'var(--danger)' : 'var(--success)', opacity: 0.7 }, svg);
       svgEl('text', { x: 65 + i * 80, y: 85, 'text-anchor': 'middle', fill: 'white', 'font-size': 13, 'font-weight': 600, text: isSybil ? 'SYBIL' : 'OK' }, svg);
     }
-    svgEl('text', { x: 30, y: 140, 'font-weight': 600, fill: '#7a3ea1', text: `${sybilCount} Sybil uzlů, ${HONEST} poctivých` }, svg);
-    svgEl('text', { x: 30, y: 160, 'font-size': 12, fill: '#444', text: `LRU obrana: ${lru ? 'AKTIVNÍ — preferují se starší kontakty' : 'VYPNUTA'}` }, svg);
+    svgEl('text', { x: 30, y: 140, 'font-weight': 600, fill: 'var(--secondary)', text: `${sybilCount} Sybil uzlů, ${HONEST} poctivých` }, svg);
+    svgEl('text', { x: 30, y: 160, 'font-size': 12, fill: 'var(--text-2)', text: `LRU obrana: ${lru ? 'AKTIVNÍ — preferují se starší kontakty' : 'VYPNUTA'}` }, svg);
     const ratio = (bucketFillSybil / k) * 100;
-    svgEl('text', { x: 30, y: 180, 'font-size': 13, 'font-weight': 600, fill: ratio > 50 ? '#c73a1f' : ratio > 25 ? '#cc8f00' : '#0a7a3d', text: `Odhad obsazení Sybilem: ${ratio.toFixed(1)} %` }, svg);
+    svgEl('text', { x: 30, y: 180, 'font-size': 13, 'font-weight': 600, fill: ratio > 50 ? 'var(--danger)' : ratio > 25 ? 'var(--warning)' : 'var(--success)', text: `Odhad obsazení Sybilem: ${ratio.toFixed(1)} %` }, svg);
 
     document.getElementById('sybil-info').innerHTML =
       lru
         ? `<strong>S LRU obranou:</strong> Sybil node musí počkat na odchod existujícího uzlu (churn). Při churn rate 10 %/period to znamená, že Sybil získá slot s P ≈ ${(bucketFillSybil / k * 100).toFixed(2)} % per bucket — i ${sybilCount} Sybilu zabere mnoho period.`
         : `<strong>Bez obrany:</strong> Sybil zabere buckety přímo poměrně k jejich počtu — ${(bucketFillSybil / k * 100).toFixed(1)} % slotů. Při ${sybilCount} Sybilu nad ${HONEST} uzly už podstatná kontrola routingu.`;
   }
-  document.getElementById('sybil-go').addEventListener('click', go);
-  ['sybil-count', 'sybil-lru'].forEach(id => document.getElementById(id).addEventListener('input', go));
+  ['sybil-count', 'sybil-lru'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', go);
+    el.addEventListener('change', go);
+  });
   go();
 }

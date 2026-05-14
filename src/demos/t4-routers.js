@@ -117,30 +117,30 @@ function initContext() {
   function draw() {
     const svg = document.getElementById('ctx-svg');
     clearSvg(svg);
-    arrowDef(svg, 'ctx-arr', '#0066cc');
+    arrowDef(svg, 'ctx-arr', 'var(--info)');
     const W = 700;
     const stepW = (W - 60) / 6;
     PHASES.forEach((p, i) => {
       const x = 30 + i * stepW;
       const isActive = i === phase;
       const isDone = i < phase;
-      const fill = isActive ? '#0066cc' : isDone ? '#b8d4ff' : '#fff';
-      const stroke = isActive ? '#003d7a' : '#0066cc';
+      const fill = isActive ? 'var(--info)' : isDone ? 'var(--info-bg)' : 'var(--node-fill)';
+      const stroke = isActive ? 'var(--info-strong)' : 'var(--info)';
       svgEl('rect', { x: x + 4, y: 90, width: stepW - 12, height: 100, fill, stroke, 'stroke-width': isActive ? 3 : 1.5, rx: 6 }, svg);
       const lines = p.name.split(' ');
-      svgEl('text', { x: x + stepW / 2, y: 115, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 600, fill: isActive ? 'white' : '#1a1a1a', text: lines[0] }, svg);
-      svgEl('text', { x: x + stepW / 2, y: 132, 'text-anchor': 'middle', 'font-size': 10, fill: isActive ? 'white' : '#444', text: lines.slice(1, 3).join(' ') }, svg);
-      svgEl('text', { x: x + stepW / 2, y: 150, 'text-anchor': 'middle', 'font-size': 10, fill: isActive ? 'white' : '#444', text: lines.slice(3).join(' ') }, svg);
+      svgEl('text', { x: x + stepW / 2, y: 115, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 600, fill: isActive ? 'white' : 'var(--text)', text: lines[0] }, svg);
+      svgEl('text', { x: x + stepW / 2, y: 132, 'text-anchor': 'middle', 'font-size': 10, fill: isActive ? 'white' : 'var(--text-2)', text: lines.slice(1, 3).join(' ') }, svg);
+      svgEl('text', { x: x + stepW / 2, y: 150, 'text-anchor': 'middle', 'font-size': 10, fill: isActive ? 'white' : 'var(--text-2)', text: lines.slice(3).join(' ') }, svg);
       if (i < PHASES.length - 1) {
-        svgEl('line', { x1: x + stepW - 4, y1: 140, x2: x + stepW + 4, y2: 140, stroke: '#888', 'stroke-width': 1.5, 'marker-end': 'url(#ctx-arr)' }, svg);
+        svgEl('line', { x1: x + stepW - 4, y1: 140, x2: x + stepW + 4, y2: 140, stroke: 'var(--text-3)', 'stroke-width': 1.5, 'marker-end': 'url(#ctx-arr)' }, svg);
       }
     });
     svgEl('text', { x: W / 2, y: 50, 'text-anchor': 'middle', 'font-size': 14, 'font-weight': 600, text: `Fáze ${phase + 1} / 6: ${PHASES[phase].name}` }, svg);
-    svgEl('text', { x: W / 2, y: 70, 'text-anchor': 'middle', 'font-size': 12, fill: '#666', text: PHASES[phase].desc }, svg);
-    svgEl('text', { x: W / 2, y: 250, 'text-anchor': 'middle', 'font-size': 11, fill: '#7a3ea1', text: 'Kontext paketu putuje s paketem skrz moduly (ne paket sám)' }, svg);
+    svgEl('text', { x: W / 2, y: 70, 'text-anchor': 'middle', 'font-size': 12, fill: 'var(--text-3)', text: PHASES[phase].desc }, svg);
+    svgEl('text', { x: W / 2, y: 250, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--secondary)', text: 'Kontext paketu putuje s paketem skrz moduly (ne paket sám)' }, svg);
 
     const rows = document.getElementById('ctx-rows');
-    rows.innerHTML = Object.entries(PHASES[phase].ctx).map(([k, v]) => `<tr><td class="mono" style="color:#7a3ea1">${k}</td><td class="mono">${v}</td></tr>`).join('');
+    rows.innerHTML = Object.entries(PHASES[phase].ctx).map(([k, v]) => `<tr><td class="mono" style="color:var(--secondary)">${k}</td><td class="mono">${v}</td></tr>`).join('');
 
     document.getElementById('ctx-phase-label').textContent = `Fáze ${phase + 1}/6`;
   }
@@ -189,14 +189,18 @@ function initSlowFast() {
     },
   };
 
-  document.getElementById('slowfast-check').addEventListener('click', () => {
+  const slowFastUpdate = () => {
     const sel = document.getElementById('slowfast-type').value;
     const c = CLASSIFICATIONS[sel];
     const out = document.getElementById('slowfast-out');
     out.innerHTML =
-      `<strong style="color:${c.path === 'FAST' ? 'var(--num)' : 'var(--warn)'};font-size:16px">${c.path === 'FAST' ? '⚡ FAST PATH (ASIC, data plane)' : '🐢 SLOW PATH (CPU, control plane)'}</strong>` +
+      `<strong style="color:${c.path === 'FAST' ? 'var(--success)' : 'var(--danger)'};font-size:16px">${c.path === 'FAST' ? '⚡ FAST PATH (ASIC, data plane)' : '🐢 SLOW PATH (CPU, control plane)'}</strong>` +
       `<div style="margin-top:8px">${c.reason}</div>`;
-  });
+  };
+  const slowFastSel = document.getElementById('slowfast-type');
+  slowFastSel.addEventListener('change', slowFastUpdate);
+  slowFastSel.addEventListener('input', slowFastUpdate);
+  slowFastUpdate();
 }
 
 // ------- Process/Fast/CEF timing comparison -------
@@ -228,15 +232,15 @@ function initCEFTiming() {
     const xS = v => 100 + (W - 160) * (v / maxV);
 
     const bars = [
-      { label: 'Process Switching', v: proc, color: '#c73a1f' },
-      { label: 'Fast Switching', v: fast, color: '#cc8f00' },
-      { label: 'CEF', v: cef, color: '#0a7a3d' },
+      { label: 'Process Switching', v: proc, color: 'var(--danger)' },
+      { label: 'Fast Switching', v: fast, color: 'var(--warning)' },
+      { label: 'CEF', v: cef, color: 'var(--success)' },
     ];
     bars.forEach((b, i) => {
       const y = 40 + i * (barH + 20);
       svgEl('text', { x: 90, y: y + barH / 2 + 4, 'text-anchor': 'end', 'font-size': 12, 'font-weight': 600, text: b.label }, svg);
       svgEl('rect', { x: 100, y, width: xS(b.v) - 100, height: barH, fill: b.color, opacity: 0.85 }, svg);
-      svgEl('text', { x: xS(b.v) + 10, y: y + barH / 2 + 4, 'font-size': 12, fill: '#444', text: `${b.v.toLocaleString()} ns` }, svg);
+      svgEl('text', { x: xS(b.v) + 10, y: y + barH / 2 + 4, 'font-size': 12, fill: 'var(--text-2)', text: `${b.v.toLocaleString()} ns` }, svg);
     });
 
     document.getElementById('cef-info').innerHTML =
@@ -244,9 +248,13 @@ function initCEFTiming() {
       `Process Switching: každý paket plný RIB+ARP lookup na CPU = ${proc.toLocaleString()} ns<br>` +
       `Fast Switching: první paket pomalý + cache hit pro ostatní = ${fast.toLocaleString()} ns ${change ? '(cache thrashing!)' : ''}<br>` +
       `CEF: FIB předpočítaná z RIB, žádný cache miss penalty = ${cef.toLocaleString()} ns<br>` +
-      `<span style="color:var(--text-muted);font-size:12px">Hodnoty jsou ilustrativní — reálný ASIC zvládá CEF v ~1 ns.</span>`;
+      `<span style="color:var(--text-3);font-size:12px">Hodnoty jsou ilustrativní — reálný ASIC zvládá CEF v ~1 ns.</span>`;
   }
-  document.getElementById('cef-run').addEventListener('click', draw);
+  ['cef-count', 'cef-change'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', draw);
+    el.addEventListener('change', draw);
+  });
   draw();
 }
 
@@ -269,7 +277,7 @@ function initCEFTrie() {
     }
     const svg = document.getElementById('cef-trie-svg');
     clearSvg(svg);
-    arrowDef(svg, 'cef-arr', '#0066cc');
+    arrowDef(svg, 'cef-arr', 'var(--info)');
 
     // Find LPM
     let match = null;
@@ -294,21 +302,21 @@ function initCEFTrie() {
     const W = 700;
     parts.forEach((b, i) => {
       const x = 30 + i * 165;
-      svgEl('rect', { x, y: 40, width: 140, height: 100, fill: '#b8d4ff', stroke: '#0066cc', 'stroke-width': 2, rx: 6 }, svg);
+      svgEl('rect', { x, y: 40, width: 140, height: 100, fill: 'var(--info-bg)', stroke: 'var(--info)', 'stroke-width': 2, rx: 6 }, svg);
       svgEl('text', { x: x + 70, y: 60, 'text-anchor': 'middle', 'font-weight': 600, 'font-size': 13, text: `Úroveň ${i + 1}` }, svg);
-      svgEl('text', { x: x + 70, y: 82, 'text-anchor': 'middle', 'font-family': 'monospace', 'font-size': 18, fill: '#003d7a', text: b.toString().padStart(3, '0') }, svg);
-      svgEl('text', { x: x + 70, y: 105, 'text-anchor': 'middle', 'font-size': 10, fill: '#444', text: `${b}.toString(2) = ${b.toString(2).padStart(8, '0')}` }, svg);
-      svgEl('text', { x: x + 70, y: 130, 'text-anchor': 'middle', 'font-size': 11, fill: '#7a3ea1', text: `lookup [${b}] v poli 256 položek` }, svg);
+      svgEl('text', { x: x + 70, y: 82, 'text-anchor': 'middle', 'font-family': 'monospace', 'font-size': 18, fill: 'var(--info-strong)', text: b.toString().padStart(3, '0') }, svg);
+      svgEl('text', { x: x + 70, y: 105, 'text-anchor': 'middle', 'font-size': 10, fill: 'var(--text-2)', text: `${b}.toString(2) = ${b.toString(2).padStart(8, '0')}` }, svg);
+      svgEl('text', { x: x + 70, y: 130, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--secondary)', text: `lookup [${b}] v poli 256 položek` }, svg);
       if (i < 3) {
-        svgEl('line', { x1: x + 140, y1: 90, x2: x + 165, y2: 90, stroke: '#0066cc', 'stroke-width': 2, 'marker-end': 'url(#cef-arr)' }, svg);
+        svgEl('line', { x1: x + 140, y1: 90, x2: x + 165, y2: 90, stroke: 'var(--info)', 'stroke-width': 2, 'marker-end': 'url(#cef-arr)' }, svg);
       }
     });
 
     document.getElementById('cef-result').innerHTML = match
-      ? `<strong>LPM: ${match.prefix} → ${match.nh}</strong><br><span style="color:var(--text-muted);font-size:12px">4 paměťové přístupy místo 32 (binární trie). 256-way mtrie je optimální pro IPv4.</span>`
+      ? `<strong>LPM: ${match.prefix} → ${match.nh}</strong><br><span style="color:var(--text-3);font-size:12px">4 paměťové přístupy místo 32 (binární trie). 256-way mtrie je optimální pro IPv4.</span>`
       : '<span class="warn">Žádný prefix se neshoduje — paket se zahodí (nebo default route).</span>';
   }
-  document.getElementById('cef-lookup').addEventListener('click', lookup);
+  document.getElementById('cef-ip').addEventListener('input', lookup);
   lookup();
 }
 
@@ -346,27 +354,27 @@ function initFragmentation() {
     const svg = document.getElementById('frag-svg');
     clearSvg(svg);
     // Original packet
-    svgEl('rect', { x: 30, y: 20, width: 640, height: 50, fill: '#b8d4ff', stroke: '#0066cc', 'stroke-width': 2, rx: 4 }, svg);
+    svgEl('rect', { x: 30, y: 20, width: 640, height: 50, fill: 'var(--info-bg)', stroke: 'var(--info)', 'stroke-width': 2, rx: 4 }, svg);
     svgEl('text', { x: 350, y: 50, 'text-anchor': 'middle', 'font-weight': 600, text: `Původní paket: ${size} B (hdr ${headerSize} + data ${dataSize})` }, svg);
 
     // Arrow down
-    svgEl('text', { x: 350, y: 95, 'text-anchor': 'middle', 'font-size': 12, fill: '#c73a1f', text: `↓ MTU = ${mtu} B → fragmentace` }, svg);
+    svgEl('text', { x: 350, y: 95, 'text-anchor': 'middle', 'font-size': 12, fill: 'var(--danger)', text: `↓ MTU = ${mtu} B → fragmentace` }, svg);
 
     // Fragments
     const totalDataW = 640;
     let x = 30;
     fragments.forEach((f, i) => {
       const w = (f.totalLen / size) * totalDataW;
-      svgEl('rect', { x, y: 130, width: w - 4, height: 50, fill: '#fce5ff', stroke: '#7a3ea1', 'stroke-width': 2, rx: 4 }, svg);
+      svgEl('rect', { x, y: 130, width: w - 4, height: 50, fill: 'var(--secondary-bg)', stroke: 'var(--secondary)', 'stroke-width': 2, rx: 4 }, svg);
       svgEl('text', { x: x + w / 2, y: 153, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 600, text: `Frag ${i + 1}` }, svg);
-      svgEl('text', { x: x + w / 2, y: 168, 'text-anchor': 'middle', 'font-size': 10, fill: '#444', text: `${f.totalLen} B, MF=${f.mf}` }, svg);
+      svgEl('text', { x: x + w / 2, y: 168, 'text-anchor': 'middle', 'font-size': 10, fill: 'var(--text-2)', text: `${f.totalLen} B, MF=${f.mf}` }, svg);
       x += w;
     });
 
     // On receiver
-    svgEl('text', { x: 350, y: 220, 'text-anchor': 'middle', 'font-size': 13, fill: '#0a7a3d', 'font-weight': 600, text: '✓ Cílový host složí podle stejného Identifier + Offset' }, svg);
-    svgEl('text', { x: 350, y: 245, 'text-anchor': 'middle', 'font-size': 11, fill: '#c73a1f', text: '⚠ Pokud se ZTRATÍ JEDINÝ fragment → celý paket je ztracen (žádná částečná data)' }, svg);
-    svgEl('text', { x: 350, y: 265, 'text-anchor': 'middle', 'font-size': 11, fill: '#666', text: 'Mezilehlé routery NESKLÁDAJÍ fragmenty — defragmentace jen na cílovém hostu' }, svg);
+    svgEl('text', { x: 350, y: 220, 'text-anchor': 'middle', 'font-size': 13, fill: 'var(--success)', 'font-weight': 600, text: '✓ Cílový host složí podle stejného Identifier + Offset' }, svg);
+    svgEl('text', { x: 350, y: 245, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--danger)', text: '⚠ Pokud se ZTRATÍ JEDINÝ fragment → celý paket je ztracen (žádná částečná data)' }, svg);
+    svgEl('text', { x: 350, y: 265, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--text-3)', text: 'Mezilehlé routery NESKLÁDAJÍ fragmenty — defragmentace jen na cílovém hostu' }, svg);
 
     const rows = document.getElementById('frag-rows');
     rows.innerHTML = fragments.map((f, i) => `<tr><td>${i + 1}</td><td class="mono">${f.id}</td><td class="mono">${f.mf}</td><td class="mono">${f.offset}</td><td class="mono">${f.totalLen}</td><td class="mono">${f.data}</td></tr>`).join('');
@@ -374,9 +382,8 @@ function initFragmentation() {
     document.getElementById('frag-info').innerHTML =
       `<strong>${fragments.length} fragmentů.</strong> Identifier všech stejný (${id}). MF=1 u všech kromě posledního, kde MF=0. ` +
       `Offset v jednotkách 8 B. Header Checksum se přepočítá. <em>Defragmentace jen na cíli</em>.<br>` +
-      `<span style="color:var(--warn);font-size:12px">IPv6 by tuto operaci v routeru ZAKÁZALO — paket by se zahodil + ICMPv6 Packet Too Big.</span>`;
+      `<span style="color:var(--danger);font-size:12px">IPv6 by tuto operaci v routeru ZAKÁZALO — paket by se zahodil + ICMPv6 Packet Too Big.</span>`;
   }
-  document.getElementById('frag-go').addEventListener('click', go);
   ['frag-size', 'frag-mtu'].forEach(id => document.getElementById(id).addEventListener('input', go));
   go();
 }
@@ -420,9 +427,8 @@ function initHeaderChanges() {
   function render() {
     const sc = document.getElementById('hdr-scenario').value;
     const rows = document.getElementById('hdr-rows');
-    rows.innerHTML = SCENARIOS[sc].map(r => `<tr style="${r.changed ? 'background:#fff4f0' : ''}"><td class="mono">${r.field}</td><td class="mono">${r.before}</td><td class="mono">${r.after}</td><td>${r.changed ? `<span style="color:var(--warn)">${r.note || 'změna'}</span>` : '—'}</td></tr>`).join('');
+    rows.innerHTML = SCENARIOS[sc].map(r => `<tr style="${r.changed ? 'background:var(--accent-bg)' : ''}"><td class="mono">${r.field}</td><td class="mono">${r.before}</td><td class="mono">${r.after}</td><td>${r.changed ? `<span style="color:var(--danger)">${r.note || 'změna'}</span>` : '—'}</td></tr>`).join('');
   }
-  document.getElementById('hdr-show').addEventListener('click', render);
   document.getElementById('hdr-scenario').addEventListener('change', render);
   render();
 }
@@ -453,18 +459,18 @@ function initPMTUD() {
     // Draw
     const svg = document.getElementById('pmtud-svg');
     clearSvg(svg);
-    arrowDef(svg, 'pmtud-arr', '#0066cc');
+    arrowDef(svg, 'pmtud-arr', 'var(--info)');
     path.forEach((p, i) => {
       const x = 30 + i * 110;
       const isBottleneck = p.mtu < 1500;
-      svgEl('rect', { x, y: 80, width: 95, height: 60, fill: isBottleneck ? '#ffe9a3' : '#b8d4ff', stroke: isBottleneck ? '#cc8f00' : '#0066cc', 'stroke-width': 2, rx: 4 }, svg);
+      svgEl('rect', { x, y: 80, width: 95, height: 60, fill: isBottleneck ? 'var(--warning-bg)' : 'var(--info-bg)', stroke: isBottleneck ? 'var(--warning)' : 'var(--info)', 'stroke-width': 2, rx: 4 }, svg);
       svgEl('text', { x: x + 47, y: 100, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 600, text: p.name }, svg);
-      svgEl('text', { x: x + 47, y: 118, 'text-anchor': 'middle', 'font-size': 10, fill: '#444', text: `MTU ${p.mtu}` }, svg);
-      if (isBottleneck) svgEl('text', { x: x + 47, y: 158, 'text-anchor': 'middle', 'font-size': 10, fill: '#c73a1f', text: '⚠ bottleneck' }, svg);
-      if (i < path.length - 1) svgEl('line', { x1: x + 95, y1: 110, x2: x + 110, y2: 110, stroke: '#0066cc', 'stroke-width': 2, 'marker-end': 'url(#pmtud-arr)' }, svg);
+      svgEl('text', { x: x + 47, y: 118, 'text-anchor': 'middle', 'font-size': 10, fill: 'var(--text-2)', text: `MTU ${p.mtu}` }, svg);
+      if (isBottleneck) svgEl('text', { x: x + 47, y: 158, 'text-anchor': 'middle', 'font-size': 10, fill: 'var(--danger)', text: '⚠ bottleneck' }, svg);
+      if (i < path.length - 1) svgEl('line', { x1: x + 95, y1: 110, x2: x + 110, y2: 110, stroke: 'var(--info)', 'stroke-width': 2, 'marker-end': 'url(#pmtud-arr)' }, svg);
     });
-    svgEl('text', { x: 350, y: 220, 'text-anchor': 'middle', 'font-weight': 600, fill: '#0a7a3d', text: '✓ PMTU = min(MTU všech hopů) = 1400' }, svg);
-    svgEl('text', { x: 350, y: 240, 'text-anchor': 'middle', 'font-size': 11, fill: '#666', text: 'Pro IPv6 je PMTUD POVINNÉ — router nesmí fragmentovat za vás' }, svg);
+    svgEl('text', { x: 350, y: 220, 'text-anchor': 'middle', 'font-weight': 600, fill: 'var(--success)', text: '✓ PMTU = min(MTU všech hopů) = 1400' }, svg);
+    svgEl('text', { x: 350, y: 240, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--text-3)', text: 'Pro IPv6 je PMTUD POVINNÉ — router nesmí fragmentovat za vás' }, svg);
 
     const ol = document.getElementById('pmtud-steps');
     ol.innerHTML = log.map((l, i) => `<li class="${i === log.length - 1 ? 'active' : 'done'}">${esc(l)}</li>`).join('');

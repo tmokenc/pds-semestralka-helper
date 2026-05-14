@@ -54,10 +54,10 @@ function initLCS() {
 
   function render() {
     document.getElementById('lcs-flows').innerHTML = flows.length === 0
-      ? '<span style="color:var(--text-muted)">Žádné toky. Klikněte „Přidej tok".</span>'
-      : flows.map((f, i) => `<div style="margin-bottom:8px"><strong style="color:#0066cc">Flow ${i + 1}:</strong><br>${esc(f).replace(/\n/g, '<br>')}</div>`).join('');
+      ? '<span style="color:var(--text-3)">Žádné toky. Klikněte „Přidej tok".</span>'
+      : flows.map((f, i) => `<div style="margin-bottom:8px"><strong style="color:var(--info)">Flow ${i + 1}:</strong><br>${esc(f).replace(/\n/g, '<br>')}</div>`).join('');
     document.getElementById('lcs-candidate').innerHTML = candidate
-      ? `<strong>Candidate signature (po ${flows.length - 1} iteracích):</strong><br><code style="background:#fff;padding:6px 10px;display:inline-block;margin-top:4px">${esc(candidate).replace(/\n/g, '<br>') || '∅ (žádný společný podřetězec)'}</code><br><span style="color:var(--text-muted);font-size:12px;margin-top:4px;display:block">${flows.length >= 5 ? '✓ Signatura se ustálila — máte invariantní část protokolu.' : 'Přidejte další tok pro stabilizaci.'}</span>`
+      ? `<strong>Candidate signature (po ${flows.length - 1} iteracích):</strong><br><code style="padding:6px 10px;display:inline-block;margin-top:4px">${esc(candidate).replace(/\n/g, '<br>') || '∅ (žádný společný podřetězec)'}</code><br><span style="color:var(--text-3);font-size:12px;margin-top:4px;display:block">${flows.length >= 5 ? '✓ Signatura se ustálila — máte invariantní část protokolu.' : 'Přidejte další tok pro stabilizaci.'}</span>`
       : '';
   }
 
@@ -93,8 +93,8 @@ function initSPID() {
     clearSvg(svg);
     const W = 700, H = 220, pad = 40;
     // Axes
-    svgEl('line', { x1: pad, y1: H - pad, x2: W - pad, y2: H - pad, stroke: '#888' }, svg);
-    svgEl('line', { x1: pad, y1: 20, x2: pad, y2: H - pad, stroke: '#888' }, svg);
+    svgEl('line', { x1: pad, y1: H - pad, x2: W - pad, y2: H - pad, stroke: 'var(--text-3)' }, svg);
+    svgEl('line', { x1: pad, y1: 20, x2: pad, y2: H - pad, stroke: 'var(--text-3)' }, svg);
     // Bars for non-zero
     const maxP = Math.max(...probs);
     const barW = (W - 2 * pad) / 256;
@@ -102,14 +102,14 @@ function initSPID() {
       if (p === 0) return;
       const x = pad + i * barW;
       const h = (H - pad - 20) * p / maxP;
-      svgEl('rect', { x, y: H - pad - h, width: Math.max(1, barW - 0.5), height: h, fill: '#0066cc', opacity: 0.7 }, svg);
+      svgEl('rect', { x, y: H - pad - h, width: Math.max(1, barW - 0.5), height: h, fill: 'var(--info)', opacity: 0.7 }, svg);
       if (p > maxP * 0.2) {
         const ch = i >= 32 && i < 127 ? String.fromCharCode(i) : i;
-        svgEl('text', { x: x + barW / 2, y: H - pad - h - 4, 'text-anchor': 'middle', 'font-size': 10, fill: '#444', text: `${ch}` }, svg);
+        svgEl('text', { x: x + barW / 2, y: H - pad - h - 4, 'text-anchor': 'middle', 'font-size': 10, fill: 'var(--text-2)', text: `${ch}` }, svg);
       }
     });
-    svgEl('text', { x: W / 2, y: H - 10, 'text-anchor': 'middle', 'font-size': 11, fill: '#666', text: 'ASCII kód (0-255)' }, svg);
-    svgEl('text', { x: 10, y: H / 2, 'font-size': 11, fill: '#666', transform: `rotate(-90 10 ${H / 2})`, text: 'P(byte)' }, svg);
+    svgEl('text', { x: W / 2, y: H - 10, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--text-3)', text: 'ASCII kód (0-255)' }, svg);
+    svgEl('text', { x: 10, y: H / 2, 'font-size': 11, fill: 'var(--text-3)', transform: `rotate(-90 10 ${H / 2})`, text: 'P(byte)' }, svg);
 
     // Show top 10
     const top = probs.map((p, i) => ({ i, p })).filter(x => x.p > 0).sort((a, b) => b.p - a.p).slice(0, 8);
@@ -118,7 +118,7 @@ function initSPID() {
       `<strong>Top frekvence:</strong> ` +
       top.map(t => `<code>${t.i >= 32 && t.i < 127 ? `'${String.fromCharCode(t.i)}'` : t.i}=${t.p.toFixed(3)}</code>`).join(' ');
   }
-  document.getElementById('spid-analyze').addEventListener('click', analyze);
+  document.getElementById('spid-input').addEventListener('input', analyze);
   analyze();
 }
 
@@ -145,12 +145,12 @@ function initKL() {
       `<table style="font-family:monospace;font-size:13px">` +
       `<tr><td><strong>P (normalizováno)</strong></td><td>[${Pn.map(x => x.toFixed(3)).join(', ')}]</td></tr>` +
       `<tr><td><strong>Q (normalizováno)</strong></td><td>[${Qn.map(x => x.toFixed(3)).join(', ')}]</td></tr>` +
-      `<tr><td><strong style="color:#0066cc">D<sub>KL</sub>(P‖Q)</strong></td><td><strong>${klPQ.toFixed(4)}</strong></td></tr>` +
-      `<tr><td><strong style="color:#7a3ea1">D<sub>KL</sub>(Q‖P)</strong></td><td><strong>${klQP.toFixed(4)}</strong></td></tr>` +
+      `<tr><td><strong style="color:var(--info)">D<sub>KL</sub>(P‖Q)</strong></td><td><strong>${klPQ.toFixed(4)}</strong></td></tr>` +
+      `<tr><td><strong style="color:var(--secondary)">D<sub>KL</sub>(Q‖P)</strong></td><td><strong>${klQP.toFixed(4)}</strong></td></tr>` +
       `</table>` +
-      `<div style="margin-top:6px;font-size:12px;color:var(--text-muted)">Není symetrická! D(P‖Q) ≠ D(Q‖P). SPID hledá protokol s nejmenší průměrnou KL přes atributy.</div>`;
+      `<div style="margin-top:6px;font-size:12px;color:var(--text-3)">Není symetrická! D(P‖Q) ≠ D(Q‖P). SPID hledá protokol s nejmenší průměrnou KL přes atributy.</div>`;
   };
-  document.getElementById('kl-calc').addEventListener('click', calc);
+  ['kl-p', 'kl-q'].forEach(id => document.getElementById(id).addEventListener('input', calc));
   calc();
 }
 
@@ -173,9 +173,9 @@ function initJA3() {
     const ja3str = `${ver},${cs},${ext},${g},${ec}`;
     const hash = await md5(ja3str);
     document.getElementById('ja3-result').innerHTML =
-      `<strong>JA3 řetězec:</strong><br><code style="font-size:13px;display:block;margin:6px 0;padding:6px 8px;background:#fff">${esc(ja3str)}</code>` +
-      `<strong>Hash (truncovaná SHA-256 jako simulace MD5):</strong><br><code style="font-size:14px;color:#7a3ea1;font-weight:600">${hash}</code><br>` +
-      `<span style="font-size:12px;color:var(--text-muted);margin-top:6px;display:block">⚠ V prohlížeči nelze přímo MD5; reálné JA3 je MD5 hash. GREASE hodnoty (0x?A?A pattern) by se odstranily před hashováním.</span>`;
+      `<strong>JA3 řetězec:</strong><br><code style="font-size:13px;display:block;margin:6px 0;padding:6px 8px">${esc(ja3str)}</code>` +
+      `<strong>Hash (truncovaná SHA-256 jako simulace MD5):</strong><br><code style="font-size:14px;color:var(--secondary);font-weight:600">${hash}</code><br>` +
+      `<span style="font-size:12px;color:var(--text-3);margin-top:6px;display:block">⚠ V prohlížeči nelze přímo MD5; reálné JA3 je MD5 hash. GREASE hodnoty (0x?A?A pattern) by se odstranily před hashováním.</span>`;
   });
 }
 
@@ -235,7 +235,7 @@ function initDPA() {
     const svg = document.getElementById('dpa-svg');
     clearSvg(svg);
     if (!states || states.length <= 1) {
-      svgEl('text', { x: 350, y: 120, 'text-anchor': 'middle', fill: '#888', text: 'Přidejte trénovací sekvence' }, svg);
+      svgEl('text', { x: 350, y: 120, 'text-anchor': 'middle', fill: 'var(--text-3)', text: 'Přidejte trénovací sekvence' }, svg);
       return;
     }
 
@@ -274,16 +274,16 @@ function initDPA() {
         const t = states.find(x => x.id === o.target);
         if (!t) return;
         const prob = o.count / (s.incoming || 1);
-        svgEl('line', { x1: s.x + 14, y1: s.y, x2: t.x - 14, y2: t.y, stroke: '#0066cc', 'stroke-width': 1 + prob * 3 }, svg);
+        svgEl('line', { x1: s.x + 14, y1: s.y, x2: t.x - 14, y2: t.y, stroke: 'var(--info)', 'stroke-width': 1 + prob * 3 }, svg);
         const mx = (s.x + t.x) / 2, my = (s.y + t.y) / 2;
-        svgEl('text', { x: mx, y: my - 6, 'text-anchor': 'middle', 'font-size': 10, fill: '#7a3ea1', text: `${sym} (${prob.toFixed(2)})` }, svg);
+        svgEl('text', { x: mx, y: my - 6, 'text-anchor': 'middle', 'font-size': 10, fill: 'var(--secondary)', text: `${sym} (${prob.toFixed(2)})` }, svg);
       });
     });
     // Nodes
     states.forEach(s => {
       const isStart = s.id === 0;
-      svgEl('circle', { cx: s.x, cy: s.y, r: 14, fill: isStart ? '#0066cc' : '#fff', stroke: '#0066cc', 'stroke-width': 2 }, svg);
-      svgEl('text', { x: s.x, y: s.y + 4, 'text-anchor': 'middle', 'font-size': 10, fill: isStart ? 'white' : '#444', text: s.label }, svg);
+      svgEl('circle', { cx: s.x, cy: s.y, r: 14, fill: isStart ? 'var(--info)' : 'var(--node-fill)', stroke: 'var(--info)', 'stroke-width': 2 }, svg);
+      svgEl('text', { x: s.x, y: s.y + 4, 'text-anchor': 'middle', 'font-size': 10, fill: isStart ? 'white' : 'var(--text-2)', text: s.label }, svg);
     });
   }
 
@@ -304,7 +304,7 @@ function initDPA() {
       curr = states.find(s => s.id === o.target);
     }
     document.getElementById('dpa-result').innerHTML =
-      `<strong style="color:var(--num)">✓ NORMÁLNÍ</strong>: P(${inp.join(',')}) = <strong>${prob.toFixed(4)}</strong><br><span style="font-size:12px;color:var(--text-muted)">${traceLog.join(' → ')}</span>`;
+      `<strong style="color:var(--success)">✓ NORMÁLNÍ</strong>: P(${inp.join(',')}) = <strong>${prob.toFixed(4)}</strong><br><span style="font-size:12px;color:var(--text-3)">${traceLog.join(' → ')}</span>`;
   }
 
   document.getElementById('dpa-add').addEventListener('click', () => {
@@ -342,9 +342,8 @@ function initPortLimits() {
       `<strong>Port ${p}</strong>: <em>${p === 443 ? 'HTTPS (oficiálně)' : p === 53 ? 'DNS' : p === 80 ? 'HTTP' : p === 22 ? 'SSH' : p === 25 ? 'SMTP' : 'různé'}</em><br>` +
       `<strong>Co se na něm reálně může objevit:</strong>` +
       `<ul style="margin-top:6px">${uses.map(u => `<li>${esc(u)}</li>`).join('')}</ul>` +
-      `<span style="font-size:12px;color:var(--text-muted)">Důsledek: <strong>port sám o sobě nic neznamená</strong>. Potřebujeme signaturu, statistiku, nebo TLS otisk.</span>`;
+      `<span style="font-size:12px;color:var(--text-3)">Důsledek: <strong>port sám o sobě nic neznamená</strong>. Potřebujeme signaturu, statistiku, nebo TLS otisk.</span>`;
   }
-  document.getElementById('port-go').addEventListener('click', go);
   document.getElementById('port-input').addEventListener('input', go);
   go();
 }
@@ -374,11 +373,14 @@ function initJA4() {
       `<tr><td><strong>JA4_a</strong> (meta)</td><td>${a}</td><td>${tx === 't' ? 'TCP' : 'QUIC'}, TLS ${ver === '13' ? '1.3' : '1.2'}, SNI ${sni}, ${parseInt(cn, 10)} ciphers, ${parseInt(en, 10)} exts, ALPN ${alpn}</td></tr>` +
       `<tr><td><strong>JA4_b</strong> (ciphers)</td><td>${b}</td><td>truncated SHA-256 sorted cipher suites</td></tr>` +
       `<tr><td><strong>JA4_c</strong> (exts)</td><td>${c}</td><td>truncated SHA-256 sorted extensions</td></tr>` +
-      `<tr style="border-top:2px solid #0066cc"><td><strong style="color:#0066cc">JA4</strong></td><td colspan="2" style="font-weight:700;color:#7a3ea1">${ja4}</td></tr></table>` +
-      `<div style="margin-top:8px;font-size:12px;color:var(--text-muted)">Známé Chrome: <code>t13d1518h2_8daaf6152771_e5627efa2ab1</code>. Detekuje malware: IcedID, Sliver, Cobalt Strike, reverse SSH shells.</div>`;
+      `<tr style="border-top:2px solid #0066cc"><td><strong style="color:var(--info)">JA4</strong></td><td colspan="2" style="font-weight:700;color:var(--secondary)">${ja4}</td></tr></table>` +
+      `<div style="margin-top:8px;font-size:12px;color:var(--text-3)">Známé Chrome: <code>t13d1518h2_8daaf6152771_e5627efa2ab1</code>. Detekuje malware: IcedID, Sliver, Cobalt Strike, reverse SSH shells.</div>`;
   }
-  document.getElementById('ja4-build').addEventListener('click', build);
-  ['ja4-tx','ja4-ver','ja4-sni','ja4-cn','ja4-en','ja4-alpn'].forEach(id => document.getElementById(id).addEventListener('input', build));
+  ['ja4-tx','ja4-ver','ja4-sni','ja4-cn','ja4-en','ja4-alpn'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', build);
+    el.addEventListener('change', build);  // selects fire 'change'
+  });
   build();
 }
 
@@ -395,12 +397,12 @@ function initThresholdTuner() {
     const svg = document.getElementById('ads-svg');
     clearSvg(svg);
     const W = 700, H = 280, pad = 50;
-    svgEl('line', { x1: pad, y1: H - pad, x2: W - pad, y2: H - pad, stroke: '#888' }, svg);
-    svgEl('text', { x: W / 2, y: H - 10, 'text-anchor': 'middle', 'font-size': 12, fill: '#666', text: 'Anomaly score' }, svg);
+    svgEl('line', { x1: pad, y1: H - pad, x2: W - pad, y2: H - pad, stroke: 'var(--text-3)' }, svg);
+    svgEl('text', { x: W / 2, y: H - 10, 'text-anchor': 'middle', 'font-size': 12, fill: 'var(--text-3)', text: 'Anomaly score' }, svg);
     // Threshold line
     const tx = pad + (W - 2 * pad) * (thresh / 100);
-    svgEl('line', { x1: tx, y1: 30, x2: tx, y2: H - pad, stroke: '#c73a1f', 'stroke-width': 2, 'stroke-dasharray': '4 3' }, svg);
-    svgEl('text', { x: tx, y: 22, 'text-anchor': 'middle', 'font-size': 12, fill: '#c73a1f', 'font-weight': 600, text: `Práh = ${thresh}` }, svg);
+    svgEl('line', { x1: tx, y1: 30, x2: tx, y2: H - pad, stroke: 'var(--danger)', 'stroke-width': 2, 'stroke-dasharray': '4 3' }, svg);
+    svgEl('text', { x: tx, y: 22, 'text-anchor': 'middle', 'font-size': 12, fill: 'var(--danger)', 'font-weight': 600, text: `Práh = ${thresh}` }, svg);
 
     // Score buckets
     const buckets = new Array(100).fill(0);
@@ -415,12 +417,12 @@ function initThresholdTuner() {
       const x = pad + (W - 2 * pad) * (i / 99);
       const norm = buckets[i];
       const anom = aBuckets[i];
-      if (norm > 0) svgEl('rect', { x, y: H - pad - (H - pad - 30) * (norm / maxC), width: 4, height: (H - pad - 30) * (norm / maxC), fill: '#0a7a3d', opacity: 0.7 }, svg);
-      if (anom > 0) svgEl('rect', { x: x + 4, y: H - pad - (H - pad - 30) * (anom / maxC), width: 4, height: (H - pad - 30) * (anom / maxC), fill: '#c73a1f', opacity: 0.7 }, svg);
+      if (norm > 0) svgEl('rect', { x, y: H - pad - (H - pad - 30) * (norm / maxC), width: 4, height: (H - pad - 30) * (norm / maxC), fill: 'var(--success)', opacity: 0.7 }, svg);
+      if (anom > 0) svgEl('rect', { x: x + 4, y: H - pad - (H - pad - 30) * (anom / maxC), width: 4, height: (H - pad - 30) * (anom / maxC), fill: 'var(--danger)', opacity: 0.7 }, svg);
     }
-    svgEl('rect', { x: W - 110, y: 35, width: 14, height: 10, fill: '#0a7a3d', opacity: 0.7 }, svg);
+    svgEl('rect', { x: W - 110, y: 35, width: 14, height: 10, fill: 'var(--success)', opacity: 0.7 }, svg);
     svgEl('text', { x: W - 92, y: 45, 'font-size': 11, text: 'normal' }, svg);
-    svgEl('rect', { x: W - 110, y: 50, width: 14, height: 10, fill: '#c73a1f', opacity: 0.7 }, svg);
+    svgEl('rect', { x: W - 110, y: 50, width: 14, height: 10, fill: 'var(--danger)', opacity: 0.7 }, svg);
     svgEl('text', { x: W - 92, y: 60, 'font-size': 11, text: 'anomaly' }, svg);
 
     // Compute confusion matrix
@@ -432,9 +434,9 @@ function initThresholdTuner() {
     const fpRate = FP / (FP + TN) * 100;
     const fnRate = FN / (FN + TP) * 100;
     let comment = '';
-    if (fpRate > 10) comment = '<span style="color:var(--warn)">⚠ FP rate &gt; 10 % — operátor začne alarmy ignorovat (alarm fatigue).</span>';
-    else if (fnRate > 20) comment = '<span style="color:var(--warn)">⚠ FN rate &gt; 20 % — útoky procházejí nezachycené.</span>';
-    else comment = '<span style="color:var(--num)">✓ Rozumný kompromis FP/FN.</span>';
+    if (fpRate > 10) comment = '<span style="color:var(--danger)">⚠ FP rate &gt; 10 % — operátor začne alarmy ignorovat (alarm fatigue).</span>';
+    else if (fnRate > 20) comment = '<span style="color:var(--danger)">⚠ FN rate &gt; 20 % — útoky procházejí nezachycené.</span>';
+    else comment = '<span style="color:var(--success)">✓ Rozumný kompromis FP/FN.</span>';
 
     document.getElementById('ads-info').innerHTML =
       `Confusion matrix (n=${total}): TP=${TP}, FN=${FN}, FP=${FP}, TN=${TN}<br>` +
